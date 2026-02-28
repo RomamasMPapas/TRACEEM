@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "936265548704",
+    "project_id": "trace-em",
+    "storage_bucket": "trace-em.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:936265548704:android:32af84d22433ea16709ac5",
+        "android_client_info": {
+          "package_name": "com.example.trace_em"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCf6D4TM88Xh58GZ02mWvTCku2gJCnXI5w"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

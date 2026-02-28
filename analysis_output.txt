@@ -1,0 +1,26 @@
+Analyzing TRACE EM...                                           
+
+   info - Dangling library doc comment - lib\core\config\philippine_regions.dart:1:1 - dangling_library_doc_comments
+   info - 'desiredAccuracy' is deprecated and shouldn't be used. use settings parameter with AndroidSettings, AppleSettings, WebSettings, or LocationSettings - lib\core\services\location_service.dart:42:9 - deprecated_member_use
+   info - Don't invoke 'print' in production code - lib\core\services\location_service.dart:45:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\core\services\location_service.dart:63:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\infrastructure\repositories\auth_repository_impl.dart:50:9 - avoid_print
+   info - 'desiredAccuracy' is deprecated and shouldn't be used. use settings parameter with AndroidSettings, AppleSettings, WebSettings, or LocationSettings - lib\infrastructure\services\tracking_service.dart:51:11 - deprecated_member_use
+   info - Don't invoke 'print' in production code - lib\injection_container.dart:37:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\injection_container.dart:43:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\presentation\screens\admin\admin_home_screen.dart:44:7 - avoid_print
+   info - 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre - lib\presentation\screens\admin\orders_management_page.dart:215:17 - deprecated_member_use
+   info - 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre - lib\presentation\screens\admin\orders_management_page.dart:288:17 - deprecated_member_use
+   info - Statements in an if should be enclosed in a block - lib\presentation\screens\admin\orders_management_page.dart:301:21 - curly_braces_in_flow_control_structures
+   info - Don't invoke 'print' in production code - lib\presentation\screens\home_screen.dart:52:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\presentation\screens\home_screen.dart:79:7 - avoid_print
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\presentation\screens\home_screen.dart:259:43 - use_build_context_synchronously
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\presentation\screens\order_tracking_screen.dart:127:28 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\presentation\widgets\home\book_view.dart:314:37 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\presentation\widgets\home\notifications_view.dart:227:24 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\presentation\widgets\home\notifications_view.dart:243:35 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\presentation\widgets\home\notifications_view.dart:264:31 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\presentation\widgets\home\profile_view.dart:153:47 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\presentation\widgets\home\track_view.dart:89:59 - deprecated_member_use
+
+22 issues found. (ran in 6.8s)

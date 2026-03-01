@@ -1,7 +1,8 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
-import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'dart:async';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
+import 'package:http/http.dart' as http;
 import '../../../core/config/philippine_regions.dart';
 
 class BookView extends StatefulWidget {
@@ -14,9 +15,12 @@ class BookView extends StatefulWidget {
 }
 
 class _BookViewState extends State<BookView> {
-  final Completer<GoogleMapController> _controller = Completer();
-  late CameraPosition _initialPosition;
+  late LatLng _initialCenter;
+  LatLng? _fromLatLng; // pin location from FROM address
+  LatLng? _toLatLng; // pin location from TO address
   bool _isBookingMode = false;
+  bool _isGeocoding = false;
+  final MapController _mapController = MapController();
 
   @override
   void initState() {
@@ -25,34 +29,20 @@ class _BookViewState extends State<BookView> {
   }
 
   void _setInitialPosition() {
-    // Get region configuration based on detected region
     final region =
         PhilippineRegions.getRegionByCode(
           widget.detectedRegion ?? 'Region 7',
         ) ??
         PhilippineRegions.region7;
-
-    _initialPosition = CameraPosition(
-      target: LatLng(region.centerLat, region.centerLng),
-      zoom: 12.0,
-    );
+    _initialCenter = LatLng(region.centerLat, region.centerLng);
   }
 
   @override
   void didUpdateWidget(BookView oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // Update map position if region changes
     if (oldWidget.detectedRegion != widget.detectedRegion) {
-      _setInitialPosition();
-      if (!kIsWeb) {
-        _updateMapPosition();
-      }
+      setState(() => _setInitialPosition());
     }
-  }
-
-  Future<void> _updateMapPosition() async {
-    final controller = await _controller.future;
-    controller.animateCamera(CameraUpdate.newCameraPosition(_initialPosition));
   }
 
   @override
@@ -87,7 +77,7 @@ class _BookViewState extends State<BookView> {
                 borderRadius: _isBookingMode
                     ? BorderRadius.circular(5)
                     : BorderRadius.zero,
-                child: kIsWeb ? _buildWebMapPlaceholder() : _buildGoogleMap(),
+                child: _buildOSMMap(),
               ),
             ),
           ),
@@ -100,9 +90,9 @@ class _BookViewState extends State<BookView> {
               right: 20,
               child: Column(
                 children: [
-                  _buildSearchInput("FROM:"),
+                  _buildSearchInput("FROM:", _fromController),
                   const SizedBox(height: 10),
-                  _buildSearchInput("TO:"),
+                  _buildSearchInput("TO:", _toController),
                 ],
               ),
             ),
@@ -159,27 +149,214 @@ class _BookViewState extends State<BookView> {
     );
   }
 
-  Widget _buildSearchInput(String label) {
-    return Container(
-      height: 45,
-      padding: const EdgeInsets.symmetric(horizontal: 15),
-      decoration: BoxDecoration(
-        color: Colors.grey.shade300,
-        borderRadius: BorderRadius.circular(5),
-      ),
-      child: Row(
-        children: [
-          Text(
-            label,
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              color: Colors.grey,
-              fontSize: 12,
-            ),
+  final TextEditingController _fromController = TextEditingController();
+  final TextEditingController _toController = TextEditingController();
+
+  @override
+  void dispose() {
+    _fromController.dispose();
+    _toController.dispose();
+    _mapController.dispose();
+    super.dispose();
+  }
+
+  /// Geocode a place name using Nominatim (free, no key needed)
+  Future<LatLng?> _geocode(String query) async {
+    try {
+      final uri = Uri.parse(
+        'https://nominatim.openstreetmap.org/search'
+        '?q=${Uri.encodeComponent(query)}, Philippines'
+        '&format=json&limit=1',
+      );
+      final response = await http.get(
+        uri,
+        headers: {'User-Agent': 'TraceEmApp/1.0 (contact@traceem.app)'},
+      );
+      if (response.statusCode == 200) {
+        final List data = jsonDecode(response.body);
+        if (data.isNotEmpty) {
+          return LatLng(
+            double.parse(data[0]['lat']),
+            double.parse(data[0]['lon']),
+          );
+        }
+      }
+    } catch (e) {
+      debugPrint('Geocode error: $e');
+    }
+    return null;
+  }
+
+  void _showAddressBottomSheet(String label, TextEditingController controller) {
+    final tempController = TextEditingController(text: controller.text);
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Padding(
+        padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
+        child: Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
           ),
-          const Expanded(child: SizedBox()),
-          const Icon(Icons.search, size: 18, color: Colors.grey),
-        ],
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade300,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                label == 'FROM:'
+                    ? 'Enter Pick-up Location'
+                    : 'Enter Destination',
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: tempController,
+                autofocus: true,
+                decoration: InputDecoration(
+                  hintText: label == 'FROM:'
+                      ? 'e.g. IT Park, Lahug, Cebu City'
+                      : 'e.g. Parkmall, Mandaue City',
+                  prefixIcon: Icon(
+                    label == 'FROM:' ? Icons.my_location : Icons.location_on,
+                    color: const Color(0xFF4C8CFF),
+                  ),
+                  suffixIcon: IconButton(
+                    icon: const Icon(Icons.clear, size: 18),
+                    onPressed: () => tempController.clear(),
+                  ),
+                  filled: true,
+                  fillColor: Colors.grey.shade100,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: BorderSide.none,
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 14,
+                  ),
+                ),
+                onSubmitted: (val) {
+                  setState(() => controller.text = val);
+                  Navigator.pop(ctx);
+                },
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF4C8CFF),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                  ),
+                  onPressed: () async {
+                    final address = tempController.text.trim();
+                    controller.text = address;
+                    Navigator.pop(ctx);
+                    if (address.isEmpty) return;
+                    setState(() => _isGeocoding = true);
+                    final coords = await _geocode(address);
+                    if (mounted) {
+                      setState(() {
+                        _isGeocoding = false;
+                        if (coords != null) {
+                          if (label == 'FROM:') {
+                            _fromLatLng = coords;
+                          } else {
+                            _toLatLng = coords;
+                          }
+                          // Animate map to the FROM pin
+                          final target = label == 'FROM:'
+                              ? coords
+                              : (_fromLatLng ?? coords);
+                          _mapController.move(target, 14.0);
+                        }
+                      });
+                    }
+                  },
+                  child: const Text(
+                    'Confirm',
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSearchInput(String label, TextEditingController controller) {
+    return GestureDetector(
+      onTap: () => _showAddressBottomSheet(label, controller),
+      child: Container(
+        height: 45,
+        padding: const EdgeInsets.symmetric(horizontal: 15),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: Colors.grey.shade300),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.06),
+              blurRadius: 6,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Icon(
+              label == 'FROM:' ? Icons.my_location : Icons.location_on,
+              color: const Color(0xFF4C8CFF),
+              size: 18,
+            ),
+            const SizedBox(width: 10),
+            Text(
+              label,
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Colors.grey,
+                fontSize: 11,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                controller.text.isEmpty ? 'Tap to search...' : controller.text,
+                style: TextStyle(
+                  color: controller.text.isEmpty
+                      ? Colors.grey.shade400
+                      : Colors.black87,
+                  fontSize: 13,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ),
+            const Icon(Icons.search, size: 18, color: Color(0xFF4C8CFF)),
+          ],
+        ),
       ),
     );
   }
@@ -243,86 +420,67 @@ class _BookViewState extends State<BookView> {
     );
   }
 
-  Widget _buildGoogleMap() {
-    return GoogleMap(
-      initialCameraPosition: _initialPosition,
-      onMapCreated: (GoogleMapController controller) {
-        _controller.complete(controller);
-      },
-      myLocationEnabled: true,
-      myLocationButtonEnabled: true,
-      zoomControlsEnabled: false,
-      mapToolbarEnabled: false,
-      markers: {
+  Widget _buildOSMMap() {
+    // Build marker list: FROM pin (red) + TO pin (blue)
+    final markers = <Marker>[
+      if (_fromLatLng != null)
         Marker(
-          markerId: const MarkerId('region_center'),
-          position: LatLng(
-            _initialPosition.target.latitude,
-            _initialPosition.target.longitude,
-          ),
-          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
-          infoWindow: InfoWindow(
-            title: widget.detectedRegion ?? 'Region 7',
-            snippet: 'Your current region',
-          ),
+          point: _fromLatLng!,
+          width: 44,
+          height: 44,
+          child: const Icon(Icons.location_on, color: Colors.red, size: 40),
         ),
-      },
-    );
-  }
-
-  Widget _buildWebMapPlaceholder() {
-    final region =
-        PhilippineRegions.getRegionByCode(
-          widget.detectedRegion ?? 'Region 7',
-        ) ??
-        PhilippineRegions.region7;
-
-    return Container(
-      width: double.infinity,
-      height: double.infinity,
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Colors.blue.shade100, Colors.blue.shade300],
+      if (_toLatLng != null)
+        Marker(
+          point: _toLatLng!,
+          width: 44,
+          height: 44,
+          child: const Icon(Icons.flag, color: Color(0xFF4C8CFF), size: 36),
         ),
-      ),
-      child: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+      // Default center pin when nothing is set yet
+      if (_fromLatLng == null && _toLatLng == null)
+        Marker(
+          point: _initialCenter,
+          width: 44,
+          height: 44,
+          child: const Icon(Icons.location_on, color: Colors.grey, size: 40),
+        ),
+    ];
+
+    return Stack(
+      children: [
+        FlutterMap(
+          mapController: _mapController,
+          options: MapOptions(initialCenter: _initialCenter, initialZoom: 12.0),
           children: [
-            Icon(Icons.map, size: 80, color: Colors.blue.shade700),
-            const SizedBox(height: 16),
-            Text(
-              region.name,
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: Colors.blue.shade900,
-              ),
+            TileLayer(
+              urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+              userAgentPackageName: 'com.traceem.app',
             ),
-            const SizedBox(height: 8),
-            Text(
-              '${region.code} - ${region.capital}',
-              style: TextStyle(fontSize: 16, color: Colors.blue.shade700),
-            ),
-            const SizedBox(height: 24),
-            Container(
-              padding: const EdgeInsets.all(16),
-              margin: const EdgeInsets.symmetric(horizontal: 32),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.9),
-                borderRadius: BorderRadius.circular(12),
+            if (_fromLatLng != null && _toLatLng != null)
+              PolylineLayer(
+                polylines: [
+                  Polyline(
+                    points: [_fromLatLng!, _toLatLng!],
+                    color: const Color(0xFF4C8CFF),
+                    strokeWidth: 4,
+                  ),
+                ],
               ),
-              child: const Text(
-                'Google Maps will display here on mobile devices.\nFor web, please configure your Google Maps API key.',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 12),
-              ),
-            ),
+            MarkerLayer(markers: markers),
           ],
         ),
-      ),
+        // Loading indicator while geocoding
+        if (_isGeocoding)
+          Positioned.fill(
+            child: Container(
+              color: Colors.black12,
+              child: const Center(
+                child: CircularProgressIndicator(color: Color(0xFF4C8CFF)),
+              ),
+            ),
+          ),
+      ],
     );
   }
 }

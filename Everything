@@ -1,47 +1,51 @@
 # TRACE EM - Project "Everything" File
-This document outlines the responsibilities of every major file in the project.
+This document outlines the responsibilities of every file in the project.
 
 ---
 
 ## 🚀 Core & Setup
-*   **`lib/main.dart`**: The main entry point of the Flutter application. It initializes Firebase, loads environmental variables, and starts the background tracking service.
-*   **`lib/injection_container.dart`**: Handles Dependency Injection (using GetIt). It links interfaces (Repositories) to their actual implementations (Firebase).
-*   **`lib/firebase_options.dart`**: Auto-generated configuration that connects your Flutter app to your specific Firebase project.
+*   **`lib/main.dart`**: The main entry point of the Flutter application. Initializes Firebase, loads environmental variables, configures location services, and starts the background tracking service.
+*   **`lib/injection_container.dart`**: Handles Dependency Injection (using GetIt). Links interfaces (Repositories) and UseCases to their actual implementations (Firebase, etc.).
+*   **`lib/firebase_options.dart`**: Auto-generated configuration that connects the Flutter app to the Firebase project.
 *   **.env**: Stores sensitive configuration like Firebase API Keys and project IDs.
 *   **pubspec.yaml**: Lists all Flutter dependencies and project assets (images, fonts).
+*   **`lib/core/error/failures.dart`**: App-wide failure and exception classes.
 
 ## 🔐 Authentication (Login & Register)
+*   **`lib/presentation/screens/splash_screen.dart`**: The initial load screen. Handles auto-login by checking authentication state before deciding whether to show login or home.
 *   **`lib/presentation/screens/login_screen.dart`**: A unified screen handling both Login and Registration. Features logic for form submission and "Enter" key trigger support.
 *   **`lib/presentation/widgets/auth/auth_widgets.dart`**: Contains reusable UI components for authentication, including custom text fields with floating labels.
-*   **`lib/infrastructure/repositories/auth_repository_impl.dart`**: The actual logic for talking to **Firebase Auth** and **Cloud Firestore** for user management, including the fully implemented **Logout** process.
-*   **`lib/domain/entities/user_entity.dart`**: Defines the "User" model, now including phone number support and region detection metadata.
+*   **`lib/infrastructure/repositories/auth_repository_impl.dart`**: Logic for talking to **Firebase Auth** and **Cloud Firestore** for user management, including the fully implemented **Logout** process.
+*   **`lib/domain/repositories/auth_repository.dart`**: Interface for the Auth Repository.
+*   **`lib/domain/entities/user_entity.dart`**: Defines the "User" model, including phone number support and region detection metadata.
+*   **`lib/domain/usecases/...`** (`check_auth_usecase.dart`, `login_usecase.dart`, `logout_usecase.dart`, `signup_usecase.dart`): Clean Architecture use cases defining specific authentication-related tasks.
 
 ## 🏠 Home & Main Dashboard
-*   **`lib/presentation/screens/home_screen.dart`**: The central hub using a `BlocBuilder` to provide real-time user data updates. Now includes a **Dynamic Notification Badge** on the bell icon that alerts users to admin responses.
+*   **`lib/presentation/screens/home_screen.dart`**: The central hub using a `BlocBuilder` to provide real-time user data updates. Includes a **Dynamic Notification Badge** on the bell icon alerting users to admin responses, and a Floating Action Button for reports.
 *   **`lib/presentation/widgets/home/book_view.dart`**: The "Book" tab. Features a dynamic **Shrinking Map Animation** transition that reveals booking controls in-place.
-*   **`lib/presentation/widgets/home/profile_view.dart`**: A premium profile editor that synchronizes directly with the database. Supports updating name, email, phone, and address.
+*   **`lib/presentation/widgets/home/profile_view.dart`**: A premium profile editor that synchronizes directly with the database. Supports updating name, email, phone, address, and maps.
 *   **`lib/presentation/widgets/home/track_view.dart`**: The "Track" tab UI for viewing active delivery orders.
 *   **`lib/presentation/widgets/home/bottom_nav.dart`**: Custom styled bottom navigation.
+*   **`lib/presentation/widgets/curve_painter.dart`**: Custom painter responsible for special UI curves used around the app.
 
 ## 📍 Real-Time Tracking & Maps
 *   **`lib/presentation/screens/order_tracking_screen.dart`**: Shows the **Live Map** with moving driver updates polled from the backend.
+*   **`lib/presentation/screens/booking_screen.dart`**: Coordinates map and user interactions specifically tailored for booking a new trace/delivery.
 *   **`lib/presentation/widgets/common/region_selector.dart`**: A widget for displaying the current detected region and allowing manual region selection via a dialog.
 *   **`lib/core/config/philippine_regions.dart`**: Database of GPS coordinates and boundaries for Philippine regions to center the map automatically.
 *   **`lib/core/services/location_service.dart`**: Requests GPS permissions and performs reverse-geocoding to detect the user's current region using Geolocator.
 *   **`lib/infrastructure/services/tracking_service.dart`**: A background service that ensures location tracking continues even if the app is minimized.
 
-## 🧠 Business Logic (BLoC)
-*   **`lib/presentation/bloc/auth_bloc.dart`**: Manages authentication state (Logged In, Logged Out, Loading, Error).
-*   **`lib/presentation/bloc/order_bloc.dart`**: Manages the state of orders fetching and tracking.
-
-## 🐍 Backend API (Python)
-*   **`backend/main.py`**: The **FastAPI** tracking engine. Simulates and serves driver coordinates for the map tracking feature.
-*   **`backend/requirements.txt`**: Lists Python dependencies for the tracking backend.
+## 📦 Domain & Business Logic (UseCases, BLoC)
+*   **`lib/domain/entities/order_entity.dart`**: Data model representing an order/trace.
+*   **`lib/domain/usecases/get_orders_usecase.dart`**: Clean architecture usecase for retrieving order data. 
+*   **`lib/domain/usecases/update_profile_usecase.dart`**: Clean architecture usecase for securely updating user profile data.
+*   **`lib/presentation/bloc/auth_bloc.dart`** (and `auth_event.dart`, `auth_state.dart`): Manages authentication state (Logged In, Logged Out, Loading, Error).
+*   **`lib/presentation/bloc/order_bloc.dart`** (and `order_event.dart`, `order_state.dart`): Manages the state of orders fetching and tracking.
 
 ## 📁 Database & Infrastructure
-*   **`lib/infrastructure/repositories/order_repository_impl.dart`**: Manages all **Cloud Firestore** interactions for orders, history, and status updates.
-- **Live Status Tracking**: Both User and Admin sides track `isOnline` status in Firestore.
-- **Persistent Login**: App session now persists across browser refreshes using `Firebase Auth` state checks on startup.
+*   **`lib/domain/repositories/order_repository.dart`**: Interface for the Order Repository.
+*   **`lib/infrastructure/repositories/order_repository_impl.dart`**: Manages all **Cloud Firestore** interactions for orders, history, and status updates. Live tracking of `isOnline` status.
 *   **`android/app/src/main/AndroidManifest.xml`**: Project-level configuration for Android, including Google Maps API key registration.
 *   **`web/index.html`**: Web-level entry point, used for configuring the Google Maps JS SDK.
 
@@ -52,9 +56,13 @@ This document outlines the responsibilities of every major file in the project.
 *   **`lib/presentation/screens/admin/admin_home_screen.dart`**: The main dashboard for administrators. Optimized for large screens with a sidebar navigation system.
 *   **`lib/presentation/screens/admin/users_page.dart`**: Allows admins to monitor all registered users and their real-time online/offline status in a tabular format.
 *   **`lib/presentation/screens/admin/complaints_page.dart`**: A feedback management system where admins can review user reports and provide official responses.
+*   **`lib/presentation/screens/admin/orders_management_page.dart`**: Dashboard section tailored for overseeing all global system orders.
 
 ## 📋 Reports & Complaints System
 *   **`lib/domain/entities/complaint_entity.dart`**: The data model for user feedback, tracking descriptions, status (pending/resolved), and admin responses.
-*   **`lib/presentation/screens/home_screen.dart`**: Updated to include a Floating Action Button (FAB) that allows regular users to submit reports directly to the admin dashboard.
+*   **`lib/presentation/screens/user_reports_screen.dart`**: Dedicated screen for standard users to view their submitted reports and corresponding admin interactions.
 *   **`lib/presentation/widgets/home/notifications_view.dart`**: The interactive notification center. Features **clickable notification tiles** that open a mini pop-up dialog to show the full message or admin response.
-    
+
+## 🐍 Backend API (Python)
+*   **`backend/main.py`**: The **FastAPI** tracking engine. Simulates and serves driver coordinates for the map tracking feature.
+*   **`backend/requirements.txt`**: Lists Python dependencies for the tracking backend.

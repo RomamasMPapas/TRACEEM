@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
@@ -7,7 +8,7 @@ import 'package:flutter/foundation.dart';
 import '../../core/config/philippine_regions.dart';
 
 class OrderTrackingScreen extends StatefulWidget {
-  final String? region; // Optional region parameter
+  final String? region;
 
   const OrderTrackingScreen({super.key, this.region});
 
@@ -16,12 +17,11 @@ class OrderTrackingScreen extends StatefulWidget {
 }
 
 class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
-  final Completer<GoogleMapController> _controller = Completer();
+  final MapController _mapController = MapController();
   Timer? _movementTimer;
   double _progress = 0.0;
 
   late PhilippineRegion _currentRegion;
-  late CameraPosition _initialPosition;
 
   // Region 7 Simulation: IT Park to Parkmall
   static const LatLng _itPark = LatLng(10.3300, 123.9060);
@@ -32,29 +32,20 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
   @override
   void initState() {
     super.initState();
-
-    // Initialize region (default to Region 7 if not specified)
     _currentRegion =
         PhilippineRegions.getRegionByCode(widget.region ?? 'Region 7') ??
         PhilippineRegions.region7;
-
-    // Set initial camera position based on region
-    _initialPosition = CameraPosition(
-      target: LatLng(_currentRegion.centerLat, _currentRegion.centerLng),
-      zoom: 12.0,
-    );
-
     _startDriverMovement();
   }
 
   @override
   void dispose() {
     _movementTimer?.cancel();
+    _mapController.dispose();
     super.dispose();
   }
 
   void _startDriverMovement() {
-    // Polls the backend every 3 seconds for the latest location
     _movementTimer = Timer.periodic(const Duration(seconds: 3), (timer) async {
       if (!mounted) return;
 
@@ -71,9 +62,6 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
             final latest = history.last;
             setState(() {
               _driverPosition = LatLng(latest['latitude'], latest['longitude']);
-
-              // Calculate progress based on distance to destination
-              // For demonstration, we'll still use a simple calculation
               double totalDist = _calculateDistance(_itPark, _parkmall);
               double distLeft = _calculateDistance(_driverPosition, _parkmall);
               _progress = (1.0 - (distLeft / totalDist)).clamp(0.0, 1.0);
@@ -87,47 +75,8 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
   }
 
   double _calculateDistance(LatLng p1, LatLng p2) {
-    // Very simplified distance calculation
     return (p1.latitude - p2.latitude).abs() +
         (p1.longitude - p2.longitude).abs();
-  }
-
-  Set<Marker> get _markers {
-    return {
-      Marker(
-        markerId: const MarkerId('it_park'),
-        position: _itPark,
-        infoWindow: const InfoWindow(title: 'Pickup: IT Park'),
-        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
-      ),
-      Marker(
-        markerId: const MarkerId('parkmall'),
-        position: _parkmall,
-        infoWindow: const InfoWindow(title: 'Drop-off: Parkmall'),
-        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
-      ),
-      Marker(
-        markerId: const MarkerId('driver'),
-        position: _driverPosition,
-        rotation: 90, // Simple rotation adjustment
-        infoWindow: InfoWindow(
-          title: 'Driver',
-          snippet: '${(_progress * 100).toInt()}% of the way',
-        ),
-        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
-      ),
-    };
-  }
-
-  Set<Polyline> get _polylines {
-    return {
-      Polyline(
-        polylineId: const PolylineId('route1'),
-        points: [_itPark, _parkmall],
-        color: Colors.blue.withOpacity(0.5),
-        width: 5,
-      ),
-    };
   }
 
   @override
@@ -141,14 +90,63 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
       ),
       body: Stack(
         children: [
-          GoogleMap(
-            mapType: MapType.normal,
-            initialCameraPosition: _initialPosition,
-            markers: _markers,
-            polylines: _polylines,
-            onMapCreated: (GoogleMapController controller) {
-              _controller.complete(controller);
-            },
+          FlutterMap(
+            mapController: _mapController,
+            options: MapOptions(
+              initialCenter: LatLng(
+                _currentRegion.centerLat,
+                _currentRegion.centerLng,
+              ),
+              initialZoom: 12.0,
+            ),
+            children: [
+              TileLayer(
+                urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                userAgentPackageName: 'com.traceem.app',
+              ),
+              PolylineLayer(
+                polylines: [
+                  Polyline(
+                    points: [_itPark, _driverPosition, _parkmall],
+                    color: Colors.blue.withOpacity(0.5),
+                    strokeWidth: 5,
+                  ),
+                ],
+              ),
+              MarkerLayer(
+                markers: [
+                  // Pickup
+                  Marker(
+                    point: _itPark,
+                    width: 40,
+                    height: 40,
+                    child: const Icon(
+                      Icons.location_on,
+                      color: Colors.green,
+                      size: 36,
+                    ),
+                  ),
+                  // Drop-off
+                  Marker(
+                    point: _parkmall,
+                    width: 40,
+                    height: 40,
+                    child: const Icon(Icons.flag, color: Colors.red, size: 36),
+                  ),
+                  // Driver
+                  Marker(
+                    point: _driverPosition,
+                    width: 44,
+                    height: 44,
+                    child: const Icon(
+                      Icons.local_shipping,
+                      color: Color(0xFF4C8CFF),
+                      size: 38,
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
           Positioned(
             bottom: 20,

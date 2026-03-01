@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
 import '../../core/config/philippine_regions.dart';
 
 class BookingScreen extends StatefulWidget {
@@ -11,7 +12,7 @@ class BookingScreen extends StatefulWidget {
 }
 
 class _BookingScreenState extends State<BookingScreen> {
-  late CameraPosition _initialPosition;
+  late LatLng _center;
 
   // Simulation: IT Park to Parkmall
   static const LatLng _itPark = LatLng(10.3300, 123.9060);
@@ -23,10 +24,7 @@ class _BookingScreenState extends State<BookingScreen> {
     final region =
         PhilippineRegions.getRegionByCode(widget.region) ??
         PhilippineRegions.region7;
-    _initialPosition = CameraPosition(
-      target: LatLng(region.centerLat, region.centerLng),
-      zoom: 13.5,
-    );
+    _center = LatLng(region.centerLat, region.centerLng);
   }
 
   @override
@@ -44,14 +42,12 @@ class _BookingScreenState extends State<BookingScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   _buildHeaderIcon(Icons.notifications, hasBadge: true),
-                  const SizedBox(
-                    width: 44,
-                  ), // Placeholder to keep layout balanced
+                  const SizedBox(width: 44),
                 ],
               ),
             ),
 
-            // From/To Inputs
+            // From/To Inputs + Map
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.all(20.0),
@@ -64,31 +60,59 @@ class _BookingScreenState extends State<BookingScreen> {
 
                     // Map Area
                     Expanded(
-                      child: Container(
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Colors.grey.shade300),
-                        ),
-                        child: GoogleMap(
-                          initialCameraPosition: _initialPosition,
-                          markers: {
-                            const Marker(
-                              markerId: MarkerId('start'),
-                              position: _itPark,
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.grey.shade300),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: FlutterMap(
+                            options: MapOptions(
+                              initialCenter: _center,
+                              initialZoom: 13.5,
                             ),
-                            const Marker(
-                              markerId: MarkerId('end'),
-                              position: _parkmall,
-                              icon: BitmapDescriptor.defaultMarker,
-                            ),
-                          },
-                          polylines: {
-                            Polyline(
-                              polylineId: const PolylineId('route'),
-                              points: const [_itPark, _parkmall],
-                              color: Colors.blue.shade900,
-                              width: 6,
-                            ),
-                          },
+                            children: [
+                              TileLayer(
+                                urlTemplate:
+                                    'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                                userAgentPackageName: 'com.traceem.app',
+                              ),
+                              PolylineLayer(
+                                polylines: [
+                                  Polyline(
+                                    points: [_itPark, _parkmall],
+                                    color: Colors.blue.shade900,
+                                    strokeWidth: 6,
+                                  ),
+                                ],
+                              ),
+                              MarkerLayer(
+                                markers: [
+                                  Marker(
+                                    point: _itPark,
+                                    width: 40,
+                                    height: 40,
+                                    child: const Icon(
+                                      Icons.location_on,
+                                      color: Colors.green,
+                                      size: 36,
+                                    ),
+                                  ),
+                                  Marker(
+                                    point: _parkmall,
+                                    width: 40,
+                                    height: 40,
+                                    child: const Icon(
+                                      Icons.flag,
+                                      color: Colors.red,
+                                      size: 36,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),
@@ -163,7 +187,7 @@ class _BookingScreenState extends State<BookingScreen> {
                       ),
                     ),
                   ),
-                  const SizedBox(width: 48), // Spacer to balance back button
+                  const SizedBox(width: 48),
                 ],
               ),
             ),

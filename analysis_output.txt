@@ -23,4 +23,4 @@ Analyzing TRACE EM...
    info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\presentation\widgets\home\profile_view.dart:153:47 - deprecated_member_use
    info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\presentation\widgets\home\track_view.dart:89:59 - deprecated_member_use
 
-22 issues found. (ran in 6.8s)
+22 issues found. (ran in 6.2s)

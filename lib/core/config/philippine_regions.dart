@@ -1,5 +1,6 @@
 /// Philippine Regions Configuration
 /// This file contains region-specific data for the TRACE EM application
+library;
 
 class PhilippineRegion {
   final String code;

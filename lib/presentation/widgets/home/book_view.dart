@@ -20,7 +20,7 @@ class BookViewState extends State<BookView> {
   LatLng? _fromLatLng; // pin location from FROM address
   LatLng? _toLatLng; // pin location from TO address
   bool _isBookingMode = false;
-  bool _isGeocoding = false;
+  final bool _isGeocoding = false;
   bool _isFetchingRoute = false;
   List<LatLng> _routePoints = [];
   double? _routeDistanceMeters;

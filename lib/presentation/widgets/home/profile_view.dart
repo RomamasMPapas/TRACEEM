@@ -169,7 +169,7 @@ class _ProfileViewState extends State<ProfileView> {
                       "Address",
                       "Street .................... No./ZIP CODE",
                       controller: _addressController,
-                      showStatusIcons: true,
+                      showEditIcon: true,
                     ),
                     const SizedBox(height: 25),
 
@@ -178,7 +178,7 @@ class _ProfileViewState extends State<ProfileView> {
                       ".................. @gmail ....................",
                       controller: _emailController,
                       prefixIcon: Icons.email_outlined,
-                      showStatusIcons: true,
+                      showEditIcon: true,
                     ),
                     const SizedBox(height: 25),
 
@@ -186,7 +186,7 @@ class _ProfileViewState extends State<ProfileView> {
                       "Number",
                       "(+63) ........................................",
                       controller: _phoneNumberController,
-                      showStatusIcons: true,
+                      showEditIcon: true,
                     ),
                     const SizedBox(height: 25),
 
@@ -252,7 +252,6 @@ class _ProfileViewState extends State<ProfileView> {
     required TextEditingController controller,
     bool isPassword = false,
     bool showEditIcon = false,
-    bool showStatusIcons = false,
     IconData? prefixIcon,
   }) {
     return Column(
@@ -299,19 +298,6 @@ class _ProfileViewState extends State<ProfileView> {
                   padding: EdgeInsets.only(right: 10),
                   child: Icon(Icons.open_in_new, size: 14, color: Colors.grey),
                 ),
-              if (showStatusIcons) ...[
-                const Text(
-                  "on",
-                  style: TextStyle(color: Colors.green, fontSize: 10),
-                ),
-                const SizedBox(width: 5),
-                const Icon(Icons.delete_outline, size: 16, color: Colors.red),
-                const SizedBox(width: 5),
-                const Padding(
-                  padding: EdgeInsets.only(right: 10),
-                  child: Icon(Icons.open_in_new, size: 14, color: Colors.grey),
-                ),
-              ],
             ],
           ),
         ),

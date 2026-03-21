@@ -32,10 +32,11 @@ class TrackView extends StatelessWidget {
               Color distColor = Colors.greenAccent;
               if (index == 0) distColor = const Color(0xFFFF8A8A); // Reddish
               if (index == 2) distColor = const Color(0xFFFFCC80); // Orange
-              if (index > 2)
+              if (index > 2) {
                 distColor = const Color(
                   0xFF64B5F6,
                 ); // Blue for live tracked orders
+              }
 
               return Padding(
                 padding: const EdgeInsets.only(bottom: 25.0),

@@ -1,13 +1,34 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:trace_em/domain/usecases/get_orders_usecase.dart';
-import 'package:trace_em/infrastructure/repositories/order_repository_impl.dart';
+import 'package:trace_em/domain/repositories/order_repository.dart';
+import 'package:trace_em/domain/entities/order_entity.dart';
+import 'package:trace_em/core/error/failures.dart';
+import 'package:dartz/dartz.dart';
+
+class MockOrderRepository implements OrderRepository {
+  @override
+  Future<Either<Failure, List<OrderEntity>>> getOrders() async {
+    return Right([
+      OrderEntity(
+        id: '1',
+        orderNumber: '10240',
+        status: 'pending',
+        progress: 0.5,
+        date: DateTime.now(),
+      ),
+    ]);
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
 
 void main() {
   late GetOrdersUseCase useCase;
-  late OrderRepositoryImpl repository;
+  late MockOrderRepository repository;
 
   setUp(() {
-    repository = OrderRepositoryImpl();
+    repository = MockOrderRepository();
     useCase = GetOrdersUseCase(repository);
   });
 

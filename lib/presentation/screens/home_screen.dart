@@ -264,7 +264,7 @@ class _HomeScreenState extends State<HomeScreen> {
             onPressed: () async {
               if (controller.text.isNotEmpty) {
                 await _submitComplaint(controller.text);
-                if (mounted) Navigator.of(dialogContext).pop();
+                if (dialogContext.mounted) Navigator.of(dialogContext).pop();
               }
             },
             style: ElevatedButton.styleFrom(

@@ -187,7 +187,29 @@ class _LoginScreenState extends State<LoginScreen>
               textInputAction: TextInputAction.done,
               onSubmitted: () => _handleLogin(),
             ),
-            const SizedBox(height: 30),
+            const SizedBox(height: 8),
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton(
+                onPressed: () {
+                  // TODO: Implement forgot password logic
+                },
+                style: TextButton.styleFrom(
+                  minimumSize: Size.zero,
+                  padding: EdgeInsets.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+                child: const Text(
+                  'Forgot password?',
+                  style: TextStyle(
+                    color: Colors.grey,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
             _buildActionButton('LOG IN', _handleLogin),
             const Padding(
               padding: EdgeInsets.symmetric(vertical: 20),

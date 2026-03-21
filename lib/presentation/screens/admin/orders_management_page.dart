@@ -212,7 +212,7 @@ class OrdersManagementPage extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               DropdownButtonFormField<String>(
-                value: statusList.contains(selectedStatus)
+                initialValue: statusList.contains(selectedStatus)
                     ? selectedStatus
                     : statusList[0],
                 decoration: const InputDecoration(labelText: 'Order Status'),
@@ -285,7 +285,7 @@ class OrdersManagementPage extends StatelessWidget {
               ),
               const SizedBox(height: 16),
               DropdownButtonFormField<String>(
-                value: selectedStatus,
+                initialValue: selectedStatus,
                 decoration: const InputDecoration(
                   labelText: 'Initial Status',
                   border: OutlineInputBorder(),
@@ -297,8 +297,9 @@ class OrdersManagementPage extends StatelessWidget {
                   );
                 }).toList(),
                 onChanged: (value) {
-                  if (value != null)
+                  if (value != null) {
                     setDialogState(() => selectedStatus = value);
+                  }
                 },
               ),
             ],

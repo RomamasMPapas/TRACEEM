@@ -1,13 +1,35 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:trace_em/domain/usecases/login_usecase.dart';
-import 'package:trace_em/infrastructure/repositories/auth_repository_impl.dart';
+import 'package:trace_em/domain/repositories/auth_repository.dart';
+import 'package:trace_em/domain/entities/user_entity.dart';
+import 'package:trace_em/core/error/failures.dart';
+import 'package:dartz/dartz.dart';
+
+class MockAuthRepository implements AuthRepository {
+  @override
+  Future<Either<Failure, UserEntity>> login(String username, String password) async {
+    if (username == 'admin' && password == 'password') {
+      return const Right(UserEntity(
+        id: '1',
+        username: 'admin',
+        email: 'admin@test.com',
+        phoneNumber: '12345',
+        address: 'test',
+      ));
+    }
+    return Left(AuthFailure('Invalid credentials'));
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
 
 void main() {
   late LoginUseCase useCase;
-  late AuthRepositoryImpl repository;
+  late MockAuthRepository repository;
 
   setUp(() {
-    repository = AuthRepositoryImpl();
+    repository = MockAuthRepository();
     useCase = LoginUseCase(repository);
   });
 

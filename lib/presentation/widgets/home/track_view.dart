@@ -95,7 +95,7 @@ class TrackView extends StatelessWidget {
                                     '📍 ${order.region}',
                                     style: TextStyle(
                                       fontSize: 12,
-                                      color: Colors.black.withOpacity(0.7),
+                                       color: Colors.black.withValues(alpha: 0.7),
                                     ),
                                   ),
                                 ],

@@ -316,7 +316,7 @@ class BookViewState extends State<BookView> {
           border: Border.all(color: Colors.grey.shade300),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.06),
+              color: Colors.black.withValues(alpha: 0.06),
               blurRadius: 6,
               offset: const Offset(0, 2),
             ),
@@ -460,7 +460,7 @@ class BookViewState extends State<BookView> {
         padding: const EdgeInsets.all(15),
         decoration: BoxDecoration(
           color: isSelected
-              ? const Color(0xFF4C8CFF).withOpacity(0.1)
+              ? const Color(0xFF4C8CFF).withValues(alpha: 0.1)
               : Colors.white,
           border: Border.all(
             color: isSelected ? const Color(0xFF4C8CFF) : Colors.grey.shade300,
@@ -677,7 +677,7 @@ class BookViewState extends State<BookView> {
                 polylines: [
                   Polyline(
                     points: [_fromLatLng!, _toLatLng!],
-                    color: const Color(0xFF4C8CFF).withOpacity(0.8),
+                    color: const Color(0xFF4C8CFF).withValues(alpha: 0.8),
                     strokeWidth: 4,
                   ),
                 ],

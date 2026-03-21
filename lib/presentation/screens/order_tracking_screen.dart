@@ -265,7 +265,7 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
                   polylines: [
                     Polyline(
                       points: [_pickup, _driverPosition, _dropoff],
-                      color: Colors.blue.withOpacity(0.5),
+                      color: Colors.blue.withValues(alpha: 0.5),
                       strokeWidth: 5,
                     ),
                   ],

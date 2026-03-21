@@ -153,7 +153,7 @@ class _ProfileViewState extends State<ProfileView> {
                         ),
                         Icon(
                           Icons.logout,
-                          color: Colors.black.withOpacity(0.7),
+                          color: Colors.black.withValues(alpha: 0.7),
                           size: 20,
                         ),
                       ],

@@ -228,7 +228,7 @@ class NotificationsDialog extends StatelessWidget {
       leading: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
+          color: color.withValues(alpha: 0.1),
           shape: BoxShape.circle,
         ),
         child: Icon(icon, color: color, size: 20),
@@ -244,7 +244,7 @@ class NotificationsDialog extends StatelessWidget {
           Text(
             msg,
             style: TextStyle(
-              color: Colors.black.withOpacity(0.7),
+              color: Colors.black.withValues(alpha: 0.7),
               fontSize: 12,
             ),
           ),
@@ -266,7 +266,7 @@ class NotificationsDialog extends StatelessWidget {
     return ListTile(
       onTap: () => _showNotificationDetail(context, title, fullResponse),
       contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-      tileColor: Colors.green.withOpacity(0.05),
+      tileColor: Colors.green.withValues(alpha: 0.05),
       leading: Container(
         padding: const EdgeInsets.all(8),
         decoration: const BoxDecoration(

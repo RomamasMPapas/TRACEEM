@@ -5,10 +5,14 @@ import '../../core/error/failures.dart';
 import '../../domain/entities/user_entity.dart';
 import '../../domain/repositories/auth_repository.dart';
 
+/// Concrete Firebase implementation of [AuthRepository].
+/// Handles all authentication and user profile operations via Firebase Auth and Firestore.
 class AuthRepositoryImpl implements AuthRepository {
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
+  /// Authenticates the user with email and password via Firebase Auth.
+  /// On success, fetches the user's profile from Firestore and returns a [UserEntity].
   @override
   Future<Either<Failure, UserEntity>> login(
     String username,
@@ -63,6 +67,8 @@ class AuthRepositoryImpl implements AuthRepository {
     }
   }
 
+  /// Creates a new user account in Firebase Auth, then saves the profile data to Firestore.
+  /// Returns the newly created [UserEntity] on success.
   @override
   Future<Either<Failure, UserEntity>> signUp({
     required String fullName,
@@ -109,6 +115,8 @@ class AuthRepositoryImpl implements AuthRepository {
     }
   }
 
+  /// Updates the current user's email, password, and Firestore profile data.
+  /// Returns the refreshed [UserEntity] after the update is applied.
   @override
   Future<Either<Failure, UserEntity>> updateProfile({
     required String id,
@@ -164,6 +172,8 @@ class AuthRepositoryImpl implements AuthRepository {
     }
   }
 
+  /// Checks if a user session is active and fetches their full profile from Firestore.
+  /// Returns null (not an error) if no user is currently signed in.
   @override
   Future<Either<Failure, UserEntity?>> getCurrentUser() async {
     try {
@@ -194,6 +204,7 @@ class AuthRepositoryImpl implements AuthRepository {
     }
   }
 
+  /// Signs the current user out of their Firebase session.
   @override
   Future<Either<Failure, void>> logout() async {
     try {

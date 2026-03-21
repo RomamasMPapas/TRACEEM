@@ -1,5 +1,7 @@
 import 'package:equatable/equatable.dart';
 
+/// Represents a user complaint or report within the TRACE EM domain.
+/// Holds the details such as who made it, the status, and any admin responses.
 class ComplaintEntity extends Equatable {
   final String id;
   final String userId;
@@ -19,6 +21,8 @@ class ComplaintEntity extends Equatable {
     this.response,
   });
 
+  /// Used by Equatable to compare instances for equality.
+  /// Any two instances with the exact same properties below will be considered equal.
   @override
   List<Object?> get props => [
     id,

@@ -2,6 +2,8 @@
 /// This file contains region-specific data for the TRACE EM application
 library;
 
+/// Represents a specific region in the Philippines.
+/// Includes geographical boundary data used for map rendering and location tracking.
 class PhilippineRegion {
   final String code;
   final String name;
@@ -26,6 +28,8 @@ class PhilippineRegion {
   });
 }
 
+/// A configuration utility class containing predefined Philippine regions.
+/// Used to associate user locations with specific service areas.
 class PhilippineRegions {
   static const region7 = PhilippineRegion(
     code: 'Region 7',
@@ -89,6 +93,8 @@ class PhilippineRegions {
 
   static const allRegions = [region7, ncr, region3, region4a, region11];
 
+  /// Retrieves a specific `PhilippineRegion` object based on its region code (e.g. 'Region 7').
+  /// Returns the default region (Region 7) if the code is not found or an error occurs.
   static PhilippineRegion? getRegionByCode(String code) {
     try {
       return allRegions.firstWhere((r) => r.code == code);
@@ -97,6 +103,7 @@ class PhilippineRegions {
     }
   }
 
+  /// Returns a list of all available region codes configured in the system.
   static List<String> getAllRegionCodes() {
     return allRegions.map((r) => r.code).toList();
   }

@@ -6,6 +6,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
+/// A developer-only screen for testing Firebase data directly.
+/// Allows creating test orders, updating progress, and simulating live driver movement.
 class DebugControlScreen extends StatefulWidget {
   const DebugControlScreen({super.key});
 
@@ -25,6 +27,7 @@ class _DebugControlScreenState extends State<DebugControlScreen> {
     super.dispose();
   }
 
+  /// Creates a new test order in Firestore under the currently authenticated user.
   Future<void> _createTestOrder() async {
     final user = _auth.currentUser;
     if (user == null) {
@@ -60,6 +63,8 @@ class _DebugControlScreenState extends State<DebugControlScreen> {
     }
   }
 
+  /// Increments an existing order's progress by 0.1 and updates its status label accordingly.
+  /// Resets progress back to 0 if it exceeds 1.0.
   Future<void> _updateOrderProgress(
     String orderId,
     double currentProgress,
@@ -77,6 +82,8 @@ class _DebugControlScreenState extends State<DebugControlScreen> {
     });
   }
 
+  /// Toggles a simulation timer that moves a driver marker between IT Park and Parkmall.
+  /// Updates both Firestore and the FastAPI tracking server every 2 seconds.
   void _toggleSimulation(String orderId) {
     if (_isSimulating) {
       _simulationTimer?.cancel();

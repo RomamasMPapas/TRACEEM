@@ -9,6 +9,8 @@ import 'login_screen.dart';
 import 'home_screen.dart';
 import 'admin/admin_home_screen.dart';
 
+/// The initial loading screen shown when the app launches.
+/// Plays a progress bar animation, fires an auth check, and routes to the correct screen.
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
@@ -23,6 +25,8 @@ class _SplashScreenState extends State<SplashScreen>
   Timer? _navigationTimer;
   AuthState? _currentAuthState;
 
+  /// Sets up the fade animation, fires the auth check, logs analytics,
+  /// and starts a 3-second timer before navigating to the next screen.
   @override
   void initState() {
     super.initState();
@@ -50,6 +54,7 @@ class _SplashScreenState extends State<SplashScreen>
     });
   }
 
+  /// Cancels the navigation timer and animation controller when this screen is removed.
   @override
   void dispose() {
     _navigationTimer?.cancel();
@@ -57,6 +62,8 @@ class _SplashScreenState extends State<SplashScreen>
     super.dispose();
   }
 
+  /// Navigates to the correct next screen based on the current [AuthState].
+  /// Admins go to [AdminHomeScreen], regular users go to [HomeScreen], others to [LoginScreen].
   void _navigateToNext(AuthState state) {
     if (!mounted) return;
 

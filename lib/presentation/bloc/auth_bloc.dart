@@ -7,6 +7,8 @@ import '../../domain/usecases/logout_usecase.dart';
 import 'auth_event.dart';
 import 'auth_state.dart';
 
+/// The BLoC (Business Logic Component) responsible for managing all authentication state.
+/// Listens for [AuthEvent]s and emits corresponding [AuthState]s.
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final LoginUseCase loginUseCase;
   final SignUpUseCase signUpUseCase;
@@ -21,6 +23,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     required this.checkAuthUseCase,
     required this.logoutUseCase,
   }) : super(AuthInitial()) {
+    // Handles checking if a user is already logged in (e.g., on app launch).
     on<AuthCheckRequested>((event, emit) async {
       final result = await checkAuthUseCase();
       result.fold(
@@ -35,6 +38,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       );
     });
 
+    // Handles the login form submission. Emits [AuthLoading] then [AuthAuthenticated] or [AuthError].
     on<LoginSubmitted>((event, emit) async {
       emit(AuthLoading());
       final result = await loginUseCase(event.username, event.password);
@@ -44,6 +48,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       );
     });
 
+    // Handles the sign-up form submission. Emits [AuthLoading] then [AuthAuthenticated] or [AuthError].
     on<SignUpSubmitted>((event, emit) async {
       emit(AuthLoading());
       final result = await signUpUseCase(
@@ -59,6 +64,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       );
     });
 
+    // Handles saving changes to the user's profile. Emits [AuthAuthenticated] with updated data or [AuthError].
     on<UpdateProfileSubmitted>((event, emit) async {
       final result = await updateProfileUseCase(
         id: event.id,
@@ -74,6 +80,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       );
     });
 
+    // Handles the logout action. Emits [AuthInitial] on success or [AuthError] on failure.
     on<LogoutRequested>((event, emit) async {
       final result = await logoutUseCase();
       result.fold(

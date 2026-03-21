@@ -5,10 +5,14 @@ import '../../core/error/failures.dart';
 import '../../domain/entities/order_entity.dart';
 import '../../domain/repositories/order_repository.dart';
 
+/// Concrete Firebase implementation of [OrderRepository].
+/// Fetches order data from Firestore for the currently authenticated user.
 class OrderRepositoryImpl implements OrderRepository {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
+  /// Queries Firestore for all orders belonging to the current user.
+  /// Returns a [List<OrderEntity>] on success, or a [ServerFailure] if an error occurs.
   @override
   Future<Either<Failure, List<OrderEntity>>> getOrders() async {
     try {

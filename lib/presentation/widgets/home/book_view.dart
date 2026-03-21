@@ -6,6 +6,8 @@ import 'package:latlong2/latlong.dart';
 import 'package:http/http.dart' as http;
 import '../../../core/config/philippine_regions.dart';
 
+/// The booking tab widget on the Home screen.
+/// Shows an OpenStreetMap with FROM/TO address search, route drawing, and vehicle selection.
 class BookView extends StatefulWidget {
   final String? detectedRegion;
 
@@ -33,6 +35,7 @@ class BookViewState extends State<BookView> {
     _setInitialPosition();
   }
 
+  /// Sets the map's initial center to the center of the user's detected region.
   void _setInitialPosition() {
     final region =
         PhilippineRegions.getRegionByCode(
@@ -50,6 +53,7 @@ class BookViewState extends State<BookView> {
     }
   }
 
+  /// Resets all booking state — clears addresses, pins, route, and hides the booking panel.
   void cancelBooking() {
     setState(() {
       _isBookingMode = false;
@@ -177,6 +181,8 @@ class BookViewState extends State<BookView> {
     super.dispose();
   }
 
+  /// Opens the address search bottom sheet for either the FROM or TO field.
+  /// On selection, updates the pin on the map and triggers route fetching if both points are set.
   void _showAddressBottomSheet(String label, TextEditingController controller) {
     final currentRegion =
         PhilippineRegions.getRegionByCode(
@@ -216,6 +222,8 @@ class BookViewState extends State<BookView> {
     );
   }
 
+  /// Fetches the driving route between the FROM and TO coordinates using OSRM.
+  /// Falls back to OpenStreetMap routing server on failure.
   Future<void> _fetchRoute() async {
     if (_fromLatLng == null || _toLatLng == null) return;
     setState(() => _isFetchingRoute = true);
@@ -295,6 +303,7 @@ class BookViewState extends State<BookView> {
     }
   }
 
+  /// Builds a tappable search input bar that opens the address bottom sheet on tap.
   Widget _buildSearchInput(String label, TextEditingController controller) {
     return GestureDetector(
       onTap: () => _showAddressBottomSheet(label, controller),
@@ -349,6 +358,7 @@ class BookViewState extends State<BookView> {
     );
   }
 
+  /// Builds the circular van/truck button that triggers booking mode when tapped.
   Widget _buildVanButton() {
     return GestureDetector(
       onTap: () => setState(() => _isBookingMode = true),
@@ -372,6 +382,8 @@ class BookViewState extends State<BookView> {
     );
   }
 
+  /// Shows a bottom sheet for the user to select a vehicle type (Motorcycle or Taxi).
+  /// Calculates and displays the trip price based on route distance.
   void _showVehicleSelectionDialog() {
     showModalBottomSheet(
       context: context,
@@ -433,6 +445,7 @@ class BookViewState extends State<BookView> {
     );
   }
 
+  /// Builds a single selectable vehicle option tile showing the icon, name, and estimated price.
   Widget _buildVehicleOption({
     required IconData icon,
     required String title,
@@ -489,6 +502,8 @@ class BookViewState extends State<BookView> {
     );
   }
 
+  /// Builds the bottom booking panel with the selected vehicle info, distance, price,
+  /// vehicle switcher button, and the final 'Book Now' confirm button.
   Widget _buildVehicleButton() {
     double distanceKm = (_routeDistanceMeters ?? 0) / 1000;
     double price = 0.0;
@@ -609,6 +624,7 @@ class BookViewState extends State<BookView> {
     );
   }
 
+  /// Builds the OpenStreetMap widget with route polyline and location markers.
   Widget _buildOSMMap() {
     // Build marker list: FROM pin (red) + TO pin (blue)
     final markers = <Marker>[

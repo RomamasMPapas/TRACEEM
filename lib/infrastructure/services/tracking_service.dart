@@ -6,7 +6,11 @@ import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 
+/// Background service responsible for periodically sending the user's GPS location
+/// to the TRACE EM tracking API while the app is running.
 class TrackingService {
+  /// Configures and starts the background tracking service for both Android and iOS.
+  /// Sets up the notification channel and kicks off the service process.
   static Future<void> initializeService() async {
     final service = FlutterBackgroundService();
 
@@ -30,6 +34,8 @@ class TrackingService {
     service.startService();
   }
 
+  /// iOS-specific background handler called when the service runs in the background.
+  /// Required entry-point for iOS background execution.
   @pragma('vm:entry-point')
   static Future<bool> onIosBackground(ServiceInstance service) async {
     WidgetsFlutterBinding.ensureInitialized();
@@ -37,6 +43,9 @@ class TrackingService {
     return true;
   }
 
+  /// Main entry-point for the background service on both Android and iOS foreground.
+  /// Runs a periodic timer every 10 minutes to fetch GPS location and send it to the tracking API.
+  /// Also listens for a 'stopService' signal to gracefully shut down.
   @pragma('vm:entry-point')
   static void onStart(ServiceInstance service) async {
     DartPluginRegistrant.ensureInitialized();

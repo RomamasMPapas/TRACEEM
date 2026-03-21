@@ -3,6 +3,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 import '../../domain/entities/user_entity.dart';
 
+/// Shows the current user's complaint/report history fetched from Firestore.
+/// Displays the status of each report and any admin response received.
 class UserReportsScreen extends StatelessWidget {
   final UserEntity user;
 

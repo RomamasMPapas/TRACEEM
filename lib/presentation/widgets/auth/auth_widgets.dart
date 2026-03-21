@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+/// Builds a styled text field with an optional password toggle eye-icon.
+/// Used on the login and registration cards in [LoginScreen].
 Widget buildCustomTextField(
   String label,
   TextEditingController controller, {
@@ -104,6 +106,7 @@ class _CustomTextFieldState extends State<_CustomTextField> {
   }
 }
 
+/// Builds a full-width styled landing button (LOG IN or SIGN UP) for the landing view.
 Widget buildLandingButton(
   String text,
   Color bgColor,
@@ -134,6 +137,7 @@ Widget buildLandingButton(
   );
 }
 
+/// Builds a small social login icon button placeholder shown on the login card.
 Widget buildSocialIcon(IconData icon, Color color) {
   return Container(
     width: 45,

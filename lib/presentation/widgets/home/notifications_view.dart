@@ -3,11 +3,14 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 import '../../../domain/entities/user_entity.dart';
 
+/// A dialog widget that displays a mixed list of static and dynamic (Firestore) notifications.
+/// Dynamic entries show resolved complaint responses; static entries show welcome and promo messages.
 class NotificationsDialog extends StatelessWidget {
   final UserEntity user;
 
   const NotificationsDialog({super.key, required this.user});
 
+  /// Shows a full-detail dialog for an individual notification item.
   void _showNotificationDetail(
     BuildContext context,
     String title,
@@ -209,6 +212,7 @@ class NotificationsDialog extends StatelessWidget {
     );
   }
 
+  /// Builds a static notification list tile (e.g. welcome or promotion) that opens a detail dialog on tap.
   Widget _buildStaticItem(
     BuildContext context,
     String title,
@@ -251,6 +255,7 @@ class NotificationsDialog extends StatelessWidget {
     );
   }
 
+  /// Builds a dynamic notification tile for a resolved complaint with an admin response.
   Widget _buildAdminResponseItem(
     BuildContext context,
     String title,

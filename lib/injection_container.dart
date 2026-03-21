@@ -18,8 +18,12 @@ import 'presentation/bloc/order_bloc.dart';
 
 import 'firebase_options.dart';
 
+/// Global GetIt service locator instance used throughout the app for dependency injection.
 final sl = GetIt.instance;
 
+/// Initializes all app dependencies using the GetIt service locator.
+/// Sets up Firebase, registers all use cases, repository implementations, and BLoCs.
+/// Must be called once in [main] before [runApp].
 Future<void> init() async {
   try {
     // Initialize Firebase

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 
+/// Admin page that lists all user complaints/reports streamed from Firestore.
+/// Allows the admin to expand each complaint and submit a response to resolve it.
 class ComplaintsPage extends StatelessWidget {
   const ComplaintsPage({super.key});
 
@@ -167,6 +169,8 @@ class ComplaintsPage extends StatelessWidget {
     );
   }
 
+  /// Shows a dialog for the admin to type and submit a response to a complaint.
+  /// Marks the complaint as 'resolved' in Firestore upon submission.
   void _showResponseDialog(BuildContext context, String docId) {
     final controller = TextEditingController();
     showDialog(

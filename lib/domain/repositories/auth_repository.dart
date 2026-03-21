@@ -2,8 +2,12 @@ import 'package:dartz/dartz.dart';
 import '../../core/error/failures.dart';
 import '../entities/user_entity.dart';
 
+/// Abstract contract defining all authentication-related operations.
+/// Concrete implementations are provided in the infrastructure layer.
 abstract class AuthRepository {
+  /// Authenticates a user with their [username] and [password].
   Future<Either<Failure, UserEntity>> login(String username, String password);
+  /// Registers a new user account with the given personal details.
   Future<Either<Failure, UserEntity>> signUp({
     required String fullName,
     required String email,
@@ -11,6 +15,7 @@ abstract class AuthRepository {
     required String phoneNumber,
     required String address,
   });
+  /// Updates an existing user's profile with the given details.
   Future<Either<Failure, UserEntity>> updateProfile({
     required String id,
     required String fullName,
@@ -19,6 +24,9 @@ abstract class AuthRepository {
     required String phoneNumber,
     required String address,
   });
+  /// Fetches the currently authenticated user, or null if no session is active.
   Future<Either<Failure, UserEntity?>> getCurrentUser();
+
+  /// Signs the current user out of the application.
   Future<Either<Failure, void>> logout();
 }

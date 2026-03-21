@@ -15,6 +15,8 @@ import '../widgets/home/notifications_view.dart';
 import 'debug_control_screen.dart';
 import 'user_reports_screen.dart';
 
+/// The main screen shown to an authenticated user.
+/// Hosts the Book/Track tabs, notification badge, profile view, and the complaint/report button.
 class HomeScreen extends StatefulWidget {
   final UserEntity user;
   const HomeScreen({super.key, required this.user});
@@ -29,6 +31,8 @@ class _HomeScreenState extends State<HomeScreen> {
   String? _detectedRegion;
   final GlobalKey<BookViewState> _bookViewKey = GlobalKey<BookViewState>();
 
+  /// Initializes the screen by fetching orders, detecting the user's GPS region,
+  /// and marking the user as online in Firestore.
   @override
   void initState() {
     super.initState();
@@ -37,12 +41,14 @@ class _HomeScreenState extends State<HomeScreen> {
     _setUserOnlineStatus(true);
   }
 
+  /// Marks the user as offline in Firestore when they leave this screen.
   @override
   void dispose() {
     _setUserOnlineStatus(false);
     super.dispose();
   }
 
+  /// Updates the user's `isOnline` field in Firestore to track their real-time online presence.
   Future<void> _setUserOnlineStatus(bool isOnline) async {
     try {
       await FirebaseFirestore.instance
@@ -213,6 +219,8 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  /// Shows a dialog allowing the user to write and submit a complaint or report.
+  /// Also provides a button to navigate to their report history.
   void _showComplaintDialog(BuildContext context) {
     final controller = TextEditingController();
     // Capture the context of the HomeScreen for the push later
@@ -278,6 +286,8 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  /// Submits the user's complaint text to the Firestore 'complaints' collection.
+  /// Shows a success or error snack bar depending on the result.
   Future<void> _submitComplaint(String description) async {
     try {
       final user = widget.user;

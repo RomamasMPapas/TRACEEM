@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 
+/// Custom painter that draws a decorative wavy curve line used as a background
+/// element on the [LoginScreen] landing view.
 class CurvePainter extends CustomPainter {
+  /// Draws the bezier curve path onto the canvas.
   @override
   void paint(Canvas canvas, Size size) {
     var paint = Paint();
@@ -26,6 +29,7 @@ class CurvePainter extends CustomPainter {
     canvas.drawPath(path, paint);
   }
 
+  /// Returns false because the curve is static and never needs to be repainted.
   @override
   bool shouldRepaint(CustomPainter oldDelegate) => false;
 }

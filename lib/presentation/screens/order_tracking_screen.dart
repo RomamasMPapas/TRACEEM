@@ -9,6 +9,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../core/config/philippine_regions.dart';
 
+/// Live tracking screen that displays a map with the driver's moving position.
+/// Shows a route polyline, pickup/dropoff markers, and a delivery progress card.
 class OrderTrackingScreen extends StatefulWidget {
   final String? region;
   final int orderIndex;
@@ -72,6 +74,8 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
     _startDriverMovement();
   }
 
+  /// Fetches the current user's saved address from Firestore to use as the dropoff label.
+  /// Only used for dynamically-created admin test orders (orderIndex >= 3).
   Future<void> _fetchUserAddress() async {
     try {
       final user = FirebaseAuth.instance.currentUser;
@@ -93,6 +97,8 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
     }
   }
 
+  /// Fetches the driving route between pickup and dropoff using the OSRM routing API.
+  /// Falls back to a secondary OSRM server if the primary is unavailable.
   Future<void> _fetchRoute() async {
     try {
       final coords =
@@ -150,6 +156,9 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
     super.dispose();
   }
 
+  /// Starts a periodic timer to simulate or fetch the driver's movement every 3 seconds.
+  /// For orderIndex 0, fetches real position from the FastAPI server.
+  /// For other orders, simulates movement along the route.
   void _startDriverMovement() {
     _movementTimer = Timer.periodic(const Duration(seconds: 3), (timer) async {
       if (!mounted) return;
@@ -209,6 +218,8 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
     });
   }
 
+  /// Simple helper to calculate approximate distance between two [LatLng] points
+  /// using the Manhattan/taxicab distance of their coordinate differences.
   double _calculateDistance(LatLng p1, LatLng p2) {
     return (p1.latitude - p2.latitude).abs() +
         (p1.longitude - p2.longitude).abs();

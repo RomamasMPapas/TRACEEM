@@ -6,6 +6,8 @@ import '../../bloc/auth_event.dart';
 import '../../bloc/auth_state.dart';
 import '../../screens/login_screen.dart';
 
+/// The user profile panel shown when the profile avatar is tapped on the Home screen.
+/// Lets the user view and update their name, email, address, phone, and password.
 class ProfileView extends StatefulWidget {
   final UserEntity user;
 
@@ -45,6 +47,7 @@ class _ProfileViewState extends State<ProfileView> {
     super.dispose();
   }
 
+  /// Dispatches an [UpdateProfileSubmitted] event to [AuthBloc] with the current form field values.
   void _updateProfile() {
     context.read<AuthBloc>().add(
       UpdateProfileSubmitted(
@@ -246,6 +249,8 @@ class _ProfileViewState extends State<ProfileView> {
     );
   }
 
+  /// Builds a single labeled form field for profile editing.
+  /// Supports password obscuring, a prefix icon, and an optional edit indicator icon.
   Widget _buildProfileField(
     String label,
     String hint, {

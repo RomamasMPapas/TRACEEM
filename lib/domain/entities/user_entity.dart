@@ -1,5 +1,7 @@
 import 'package:equatable/equatable.dart';
 
+/// Represents a user entity within the TRACE EM domain.
+/// Stores application user details including role, contact info, and their configured Philippine region.
 class UserEntity extends Equatable {
   final String id;
   final String username;
@@ -19,6 +21,8 @@ class UserEntity extends Equatable {
     this.role = 'user', // Default role is user
   });
 
+  /// Exposes properties for the Equatable package to compare `UserEntity` instances.
+  /// Used primarily to check if a user's details have changed.
   @override
   List<Object?> get props => [
     id,

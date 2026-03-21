@@ -8,6 +8,9 @@ import 'presentation/bloc/order_bloc.dart';
 import 'presentation/screens/splash_screen.dart';
 import 'infrastructure/services/tracking_service.dart';
 
+/// Application entry point.
+/// Loads environment variables, initializes all dependencies via the injection container,
+/// starts the background tracking service on non-web platforms, and launches the app.
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: ".env");
@@ -21,6 +24,8 @@ void main() async {
   runApp(const MyApp());
 }
 
+/// The root widget of the TRACE EM application.
+/// Sets up the [MultiBlocProvider] with [AuthBloc] and [OrderBloc], then loads the [SplashScreen].
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 

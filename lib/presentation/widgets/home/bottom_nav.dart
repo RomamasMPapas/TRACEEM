@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+/// Custom bottom navigation bar for the Home screen with BOOK and TRACK tabs.
+/// Also shows a branded TRACE EM footer bar with a truck icon below the tabs.
 class CustomBottomNav extends StatelessWidget {
   final int currentIndex;
   final ValueChanged<int> onTabSelected;

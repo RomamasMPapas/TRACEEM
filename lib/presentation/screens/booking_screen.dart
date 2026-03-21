@@ -18,6 +18,8 @@ class _BookingScreenState extends State<BookingScreen> {
   static const LatLng _itPark = LatLng(10.3300, 123.9060);
   static const LatLng _parkmall = LatLng(10.3250, 123.9350);
 
+  /// Initializes the state of the booking screen.
+  /// Sets up the initial map center based on the provided region code or defaults to Region 7.
   @override
   void initState() {
     super.initState();
@@ -27,6 +29,8 @@ class _BookingScreenState extends State<BookingScreen> {
     _center = LatLng(region.centerLat, region.centerLng);
   }
 
+  /// Builds the main UI structure for the booking screen,
+  /// including the header, map view, input controls, and footer.
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -197,6 +201,8 @@ class _BookingScreenState extends State<BookingScreen> {
     );
   }
 
+  /// Helper method to create a reusable header icon with an optional notification badge.
+  /// Used primarily for the top app bar icons.
   Widget _buildHeaderIcon(IconData icon, {bool hasBadge = false}) {
     return Container(
       padding: const EdgeInsets.all(8),
@@ -226,6 +232,8 @@ class _BookingScreenState extends State<BookingScreen> {
     );
   }
 
+  /// Helper method to create input boxes for "FROM" and "TO" location fields.
+  /// Displays a label and a search icon within a styled container.
   Widget _buildInputBox(String label) {
     return Container(
       height: 40,
@@ -250,6 +258,7 @@ class _BookingScreenState extends State<BookingScreen> {
     );
   }
 
+  /// Helper method to build the UI box for selecting or displaying the vehicle type.
   Widget _buildVehicleBox() {
     return Container(
       width: 100,
@@ -272,6 +281,7 @@ class _BookingScreenState extends State<BookingScreen> {
     );
   }
 
+  /// Helper method to build the UI box displaying the total calculated amount for the booking.
   Widget _buildTotalBox() {
     return Container(
       width: double.infinity,

@@ -27,6 +27,7 @@ class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0; // 0 for BOOK, 1 for TRACK
   bool _isProfileView = false;
   String? _detectedRegion;
+  final GlobalKey<BookViewState> _bookViewKey = GlobalKey<BookViewState>();
 
   @override
   void initState() {
@@ -184,14 +185,21 @@ class _HomeScreenState extends State<HomeScreen> {
           body: _isProfileView
               ? ProfileView(user: currentUser)
               : (_currentIndex == 0
-                    ? BookView(detectedRegion: _detectedRegion)
+                    ? BookView(
+                        key: _bookViewKey,
+                        detectedRegion: _detectedRegion,
+                      )
                     : const TrackView()),
           bottomNavigationBar: _isProfileView
               ? null
               : CustomBottomNav(
                   currentIndex: _currentIndex,
-                  onTabSelected: (index) =>
-                      setState(() => _currentIndex = index),
+                  onTabSelected: (index) {
+                    if (index == 0) {
+                      _bookViewKey.currentState?.cancelBooking();
+                    }
+                    setState(() => _currentIndex = index);
+                  },
                 ),
           floatingActionButton: _isProfileView
               ? null

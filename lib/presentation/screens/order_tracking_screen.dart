@@ -5,12 +5,15 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../../core/config/philippine_regions.dart';
 
 class OrderTrackingScreen extends StatefulWidget {
   final String? region;
+  final int orderIndex;
 
-  const OrderTrackingScreen({super.key, this.region});
+  const OrderTrackingScreen({super.key, this.region, this.orderIndex = 0});
 
   @override
   State<OrderTrackingScreen> createState() => _OrderTrackingScreenState();
@@ -20,14 +23,15 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
   final MapController _mapController = MapController();
   Timer? _movementTimer;
   double _progress = 0.0;
+  List<LatLng> _routePoints = [];
+
+  late LatLng _pickup;
+  late LatLng _dropoff;
+  late LatLng _driverPosition;
+  String _pickupName = '';
+  String _dropoffName = '';
 
   late PhilippineRegion _currentRegion;
-
-  // Region 7 Simulation: IT Park to Parkmall
-  static const LatLng _itPark = LatLng(10.3300, 123.9060);
-  static const LatLng _parkmall = LatLng(10.3250, 123.9350);
-
-  LatLng _driverPosition = _itPark;
 
   @override
   void initState() {
@@ -35,7 +39,108 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
     _currentRegion =
         PhilippineRegions.getRegionByCode(widget.region ?? 'Region 7') ??
         PhilippineRegions.region7;
+
+    if (widget.orderIndex == 0) {
+      // Red order
+      _pickupName = 'IT Park, Cebu City';
+      _dropoffName = 'Tipolo National High School';
+      _pickup = const LatLng(10.3300, 123.9060);
+      _dropoff = const LatLng(10.3280, 123.9280);
+    } else if (widget.orderIndex == 1) {
+      // Green order
+      _pickupName = 'Parkmall, Mandaue City';
+      _dropoffName = 'Tipolo National High School';
+      _pickup = const LatLng(10.3250, 123.9350);
+      _dropoff = const LatLng(10.3280, 123.9280);
+    } else if (widget.orderIndex == 2) {
+      // Orange order
+      _pickupName = 'SM City Cebu';
+      _dropoffName = 'Tipolo National High School';
+      _pickup = const LatLng(10.3117, 123.9183);
+      _dropoff = const LatLng(10.3280, 123.9280);
+    } else {
+      // Dynamically added admin test order
+      _pickupName = 'Trace EM Hub, Mandaue';
+      _dropoffName = 'Your Location (Fetching...)';
+      _pickup = const LatLng(10.3323, 123.9400); // Warehouse
+      _dropoff = const LatLng(10.3150, 123.8900); // Generic home default
+      _fetchUserAddress();
+    }
+    _driverPosition = _pickup;
+
+    _fetchRoute();
     _startDriverMovement();
+  }
+
+  Future<void> _fetchUserAddress() async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        final doc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .get();
+        if (doc.exists && doc.data()!.containsKey('address')) {
+          if (mounted) {
+            setState(() {
+              _dropoffName = doc['address'];
+            });
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint('Error fetching user address: $e');
+    }
+  }
+
+  Future<void> _fetchRoute() async {
+    try {
+      final coords =
+          '${_pickup.longitude},${_pickup.latitude};${_dropoff.longitude},${_dropoff.latitude}';
+      final headers = {'User-Agent': 'TraceEmApp/1.0 (contact@traceem.app)'};
+
+      var url =
+          'https://router.project-osrm.org/route/v1/driving/$coords?overview=full&geometries=geojson';
+      http.Response? response;
+
+      try {
+        response = await http.get(Uri.parse(url), headers: headers);
+      } catch (e) {
+        debugPrint('Primary OSRM failed: $e');
+        response = null;
+      }
+
+      if (response == null || response.statusCode != 200) {
+        url =
+            'https://routing.openstreetmap.de/routed-car/route/v1/driving/$coords?overview=full&geometries=geojson';
+        response = await http.get(Uri.parse(url), headers: headers);
+      }
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final routes = data['routes'] as List?;
+        if (routes != null && routes.isNotEmpty) {
+          final geometry = routes[0]['geometry'];
+          final coordinates = geometry['coordinates'] as List;
+
+          final points = coordinates.map((coord) {
+            return LatLng(
+              (coord[1] as num).toDouble(),
+              (coord[0] as num).toDouble(),
+            );
+          }).toList();
+
+          if (mounted) {
+            setState(() {
+              _routePoints = points;
+              // Add driver position to slightly offset the center later if needed
+            });
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint('Error fetching route for tracking: $e');
+    }
   }
 
   @override
@@ -49,27 +154,57 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
     _movementTimer = Timer.periodic(const Duration(seconds: 3), (timer) async {
       if (!mounted) return;
 
-      try {
-        final String baseUrl = kIsWeb
-            ? 'http://localhost:8000'
-            : 'http://10.0.2.2:8000';
+      if (widget.orderIndex == 0) {
+        try {
+          final String baseUrl = kIsWeb
+              ? 'http://localhost:8000'
+              : 'http://10.0.2.2:8000';
 
-        final response = await http.get(Uri.parse('$baseUrl/history/user_123'));
+          final response = await http.get(
+            Uri.parse('$baseUrl/history/user_123'),
+          );
 
-        if (response.statusCode == 200) {
-          final List<dynamic> history = jsonDecode(response.body);
-          if (history.isNotEmpty) {
-            final latest = history.last;
-            setState(() {
-              _driverPosition = LatLng(latest['latitude'], latest['longitude']);
-              double totalDist = _calculateDistance(_itPark, _parkmall);
-              double distLeft = _calculateDistance(_driverPosition, _parkmall);
-              _progress = (1.0 - (distLeft / totalDist)).clamp(0.0, 1.0);
-            });
+          if (response.statusCode == 200) {
+            final List<dynamic> history = jsonDecode(response.body);
+            if (history.isNotEmpty) {
+              final latest = history.last;
+              setState(() {
+                _driverPosition = LatLng(
+                  latest['latitude'],
+                  latest['longitude'],
+                );
+                double totalDist = _calculateDistance(_pickup, _dropoff);
+                double distLeft = _calculateDistance(_driverPosition, _dropoff);
+                _progress = (1.0 - (distLeft / totalDist)).clamp(0.0, 1.0);
+              });
+            }
           }
+        } catch (e) {
+          debugPrint('Error fetching tracking data: $e');
         }
-      } catch (e) {
-        debugPrint('Error fetching tracking data: $e');
+      } else {
+        setState(() {
+          if (_progress < 1.0) {
+            _progress += 0.015; // move slower so they can watch it arrive
+          }
+          if (_progress >= 1.0) {
+            _progress = 1.0; // park it at the drop-off
+            _movementTimer?.cancel();
+          }
+
+          if (_routePoints.isNotEmpty) {
+            final idx = (_progress * (_routePoints.length - 1)).round();
+            _driverPosition = _routePoints[idx];
+          } else {
+            // Straight line fallback
+            _driverPosition = LatLng(
+              _pickup.latitude +
+                  (_dropoff.latitude - _pickup.latitude) * _progress,
+              _pickup.longitude +
+                  (_dropoff.longitude - _pickup.longitude) * _progress,
+            );
+          }
+        });
       }
     });
   }
@@ -104,34 +239,49 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
                 urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                 userAgentPackageName: 'com.traceem.app',
               ),
-              PolylineLayer(
-                polylines: [
-                  Polyline(
-                    points: [_itPark, _driverPosition, _parkmall],
-                    color: Colors.blue.withOpacity(0.5),
-                    strokeWidth: 5,
-                  ),
-                ],
-              ),
+              if (_routePoints.isNotEmpty)
+                PolylineLayer(
+                  polylines: [
+                    Polyline(
+                      points: _routePoints,
+                      color: const Color(0xFF4C8CFF),
+                      strokeWidth: 5,
+                    ),
+                  ],
+                )
+              else
+                PolylineLayer(
+                  polylines: [
+                    Polyline(
+                      points: [_pickup, _driverPosition, _dropoff],
+                      color: Colors.blue.withOpacity(0.5),
+                      strokeWidth: 5,
+                    ),
+                  ],
+                ),
               MarkerLayer(
                 markers: [
                   // Pickup
                   Marker(
-                    point: _itPark,
-                    width: 40,
-                    height: 40,
+                    point: _pickup,
+                    width: 44,
+                    height: 44,
                     child: const Icon(
                       Icons.location_on,
                       color: Colors.green,
-                      size: 36,
+                      size: 40,
                     ),
                   ),
                   // Drop-off
                   Marker(
-                    point: _parkmall,
-                    width: 40,
-                    height: 40,
-                    child: const Icon(Icons.flag, color: Colors.red, size: 36),
+                    point: _dropoff,
+                    width: 44,
+                    height: 44,
+                    child: const Icon(
+                      Icons.location_on,
+                      color: Colors.red,
+                      size: 40,
+                    ),
                   ),
                   // Driver
                   Marker(
@@ -198,21 +348,24 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
                       ],
                     ),
                     const Divider(height: 24),
-                    const ListTile(
+                    ListTile(
                       contentPadding: EdgeInsets.zero,
-                      leading: Icon(Icons.location_on, color: Colors.green),
+                      leading: const Icon(
+                        Icons.location_on,
+                        color: Colors.green,
+                      ),
                       title: Text(
-                        'IT Park, Cebu City',
-                        style: TextStyle(fontSize: 14),
+                        _pickupName,
+                        style: const TextStyle(fontSize: 14),
                       ),
                       dense: true,
                     ),
-                    const ListTile(
+                    ListTile(
                       contentPadding: EdgeInsets.zero,
-                      leading: Icon(Icons.flag, color: Colors.red),
+                      leading: const Icon(Icons.location_on, color: Colors.red),
                       title: Text(
-                        'Parkmall, Mandaue City',
-                        style: TextStyle(fontSize: 14),
+                        _dropoffName,
+                        style: const TextStyle(fontSize: 14),
                       ),
                       dense: true,
                     ),

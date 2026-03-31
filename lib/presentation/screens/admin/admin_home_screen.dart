@@ -9,6 +9,8 @@ import '../login_screen.dart';
 import 'users_page.dart';
 import 'complaints_page.dart';
 import 'orders_management_page.dart';
+import 'receipts_page.dart';
+import 'ratings_page.dart';
 
 /// The main admin dashboard screen. Hosts Users, Orders, and Complaints tabs.
 /// Adapts to wide screens with a [NavigationRail] and narrow screens with a [BottomNavigationBar].
@@ -122,6 +124,16 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                     selectedIcon: Icon(Icons.report_gmailerrorred),
                     label: Text('Complaints'),
                   ),
+                  NavigationRailDestination(
+                    icon: Icon(Icons.receipt_long_outlined),
+                    selectedIcon: Icon(Icons.receipt_long),
+                    label: Text('Receipts'),
+                  ),
+                  NavigationRailDestination(
+                    icon: Icon(Icons.star_outline),
+                    selectedIcon: Icon(Icons.star),
+                    label: Text('Ratings'),
+                  ),
                 ],
               ),
             const VerticalDivider(thickness: 1, width: 1),
@@ -133,6 +145,8 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                   UsersPage(),
                   OrdersManagementPage(),
                   ComplaintsPage(),
+                  ReceiptsPage(),
+                  RatingsPage(),
                 ],
               ),
             ),
@@ -155,6 +169,14 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                   BottomNavigationBarItem(
                     icon: Icon(Icons.report),
                     label: 'Complaints',
+                  ),
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.receipt_long),
+                    label: 'Receipts',
+                  ),
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.star),
+                    label: 'Ratings',
                   ),
                 ],
               )

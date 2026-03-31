@@ -22,7 +22,11 @@ This document outlines the responsibilities of every file in the project.
 
 ## 🏠 Home & Main Dashboard
 *   **`lib/presentation/screens/home_screen.dart`**: The central hub using a `BlocBuilder` to provide real-time user data updates. Includes a **Dynamic Notification Badge** on the bell icon alerting users to admin responses, and a Floating Action Button for reports.
-*   **`lib/presentation/widgets/home/book_view.dart`**: The "Book" tab. Features a dynamic **Shrinking Map Animation** transition. Integrates **OpenStreetMap** with **Nominatim** for region-restricted auto-complete address searching. Uses the **OSRM API** to plot actual driving routes between locations and dynamically calculates distance-based pricing for different vehicle modes (Motorcycle, Taxi).
+*   **`lib/presentation/widgets/home/book_view.dart`**: The "Book" tab. Features a dynamic **Shrinking Map Animation**. Integrates **OpenStreetMap** with **Nominatim** for address searching. Uses **OSRM API** for road-snapped routes. Includes the **Mock Ride Booking Flow**:
+    *   **Waiting Dialog**: A 10-second simulated search for nearby drivers.
+    *   **Random Driver Picking**: Randomly selects from Motorcycle/Taxi driver pools with unique ratings and vehicle info.
+    *   **Virtual Receipt**: Displays details, a map snippet, and a **Doodle Profile Picture** (via Robohash).
+    *   **Simulate Drive**: Animates the vehicle icon moving slowly along the route before arriving at the destination.
 *   **`lib/presentation/widgets/home/profile_view.dart`**: A premium profile editor that synchronizes directly with the database. Supports updating name, email, phone, address, and maps.
 *   **`lib/presentation/widgets/home/track_view.dart`**: The "Track" tab UI for viewing active delivery orders.
 *   **`lib/presentation/widgets/home/bottom_nav.dart`**: Custom styled bottom navigation.
@@ -30,7 +34,6 @@ This document outlines the responsibilities of every file in the project.
 
 ## 📍 Real-Time Tracking & Maps
 *   **`lib/presentation/screens/order_tracking_screen.dart`**: Shows the **Live Map** (powered by `flutter_map` and OpenStreetMap) with moving driver updates polled from the backend.
-*   **`lib/presentation/screens/booking_screen.dart`**: Coordinates map and user interactions using a free, keyless map solution specifically tailored for booking a new trace/delivery.
 *   **`lib/presentation/widgets/common/region_selector.dart`**: A widget for displaying the current detected region and allowing manual region selection via a dialog.
 *   **`lib/core/config/philippine_regions.dart`**: Database of GPS coordinates and boundaries for Philippine regions to center the map automatically.
 *   **`lib/core/services/location_service.dart`**: Requests GPS permissions and performs reverse-geocoding to detect the user's current region using Geolocator.
@@ -57,11 +60,14 @@ This document outlines the responsibilities of every file in the project.
 *   **`lib/presentation/screens/admin/users_page.dart`**: Allows admins to monitor all registered users and their real-time online/offline status in a tabular format.
 *   **`lib/presentation/screens/admin/complaints_page.dart`**: A feedback management system where admins can review user reports and provide official responses.
 *   **`lib/presentation/screens/admin/orders_management_page.dart`**: Dashboard section tailored for overseeing all global system orders.
+*   **`lib/presentation/screens/admin/receipts_page.dart`**: Admin log for tracking ride history, order IDs, and payment details.
+*   **`lib/presentation/screens/admin/ratings_page.dart`**: Admin log for monitoring driver performance and user feedback/ratings.
     
-## 📋 Reports & Complaints System
+## 📋 User Engagement & Feedback
 *   **`lib/domain/entities/complaint_entity.dart`**: The data model for user feedback, tracking descriptions, status (pending/resolved), and admin responses.
 *   **`lib/presentation/screens/user_reports_screen.dart`**: Dedicated screen for standard users to view their submitted reports and corresponding admin interactions.
-*   **`lib/presentation/widgets/home/notifications_view.dart`**: The interactive notification center. Features **clickable notification tiles** that open a mini pop-up dialog to show the full message or admin response.
+*   **`lib/presentation/widgets/home/notifications_view.dart`**: The interactive notification center. Features **clickable notification tiles** that open a mini pop-up dialog.
+*   **`lib/presentation/screens/rating_screen.dart`**: Post-ride feedback screen where users can rate drivers and leave comments.
 
 ## 🐍 Backend API (Python)
 *   **`backend/main.py`**: The **FastAPI** tracking engine. Simulates and serves driver coordinates for the map tracking feature.

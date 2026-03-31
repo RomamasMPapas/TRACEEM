@@ -103,64 +103,100 @@ class _HomeScreenState extends State<HomeScreen> {
         return Scaffold(
           backgroundColor: Colors.white,
           appBar: AppBar(
-            backgroundColor: const Color(0xFF4C8CFF),
-            elevation: 0,
-            leading: Padding(
-              padding: const EdgeInsets.only(left: 15.0),
-              child: StreamBuilder<QuerySnapshot>(
-                stream: FirebaseFirestore.instance
-                    .collection('complaints')
-                    .where('userId', isEqualTo: currentUser.id)
-                    .where('status', isEqualTo: 'resolved')
-                    .snapshots(),
-                builder: (context, snapshot) {
-                  final hasNewResponse =
-                      snapshot.hasData && snapshot.data!.docs.isNotEmpty;
+            flexibleSpace: Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [Color(0xFF4C8CFF), Color(0xFF3B6FCC)],
+                ),
+              ),
+            ),
+            elevation: 8,
+            shadowColor: Colors.black26,
+            centerTitle: true,
+            title: const Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.local_shipping, color: Colors.white, size: 28),
+                SizedBox(width: 10),
+                Text(
+                  'TRACE EM',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w900,
+                    fontSize: 22,
+                    letterSpacing: 1.5,
+                  ),
+                ),
+              ],
+            ),
+            leadingWidth: 70,
+            leading: Center(
+              child: Padding(
+                padding: const EdgeInsets.only(left: 15.0),
+                child: StreamBuilder<QuerySnapshot>(
+                  stream: FirebaseFirestore.instance
+                      .collection('complaints')
+                      .where('userId', isEqualTo: currentUser.id)
+                      .where('status', isEqualTo: 'resolved')
+                      .snapshots(),
+                  builder: (context, snapshot) {
+                    final hasNewResponse =
+                        snapshot.hasData && snapshot.data!.docs.isNotEmpty;
 
-                  return GestureDetector(
-                    onTap: () {
-                      showDialog(
-                        context: context,
-                        builder: (context) =>
-                            NotificationsDialog(user: currentUser),
-                      );
-                    },
-                    child: Stack(
-                      clipBehavior: Clip.none,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(5),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(8),
+                    return GestureDetector(
+                      onTap: () {
+                        showDialog(
+                          context: context,
+                          builder: (context) =>
+                              NotificationsDialog(user: currentUser),
+                        );
+                      },
+                      child: Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(6),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.9),
+                              borderRadius: BorderRadius.circular(12),
+                              boxShadow: const [
+                                BoxShadow(
+                                  color: Colors.black26,
+                                  blurRadius: 8,
+                                  offset: Offset(0, 3),
+                                ),
+                              ],
+                            ),
+                            child: const Icon(
+                              Icons.notifications_active_outlined,
+                              color: Color(0xFF3B6FCC),
+                              size: 24,
+                            ),
                           ),
-                          child: const Icon(
-                            Icons.notifications,
-                            color: Colors.black,
-                            size: 24,
-                          ),
-                        ),
-                        if (hasNewResponse)
-                          Positioned(
-                            top: -2,
-                            right: -2,
-                            child: Container(
-                              width: 12,
-                              height: 12,
-                              decoration: BoxDecoration(
-                                color: Colors.red,
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: const Color(0xFF4C8CFF),
-                                  width: 2,
+                          if (hasNewResponse)
+                            Positioned(
+                              top: -4,
+                              right: -4,
+                              child: Container(
+                                width: 12,
+                                height: 12,
+                                decoration: BoxDecoration(
+                                  color: Colors.red,
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: const Color(0xFF4C8CFF),
+                                    width: 2,
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                      ],
-                    ),
-                  );
-                },
+                        ],
+                      ),
+                    );
+                  },
+                ),
               ),
             ),
             actions: [
@@ -180,9 +216,24 @@ class _HomeScreenState extends State<HomeScreen> {
                 padding: const EdgeInsets.only(right: 15.0),
                 child: GestureDetector(
                   onTap: () => setState(() => _isProfileView = !_isProfileView),
-                  child: const CircleAvatar(
-                    backgroundColor: Colors.white,
-                    child: Icon(Icons.person_outline, color: Colors.black),
+                  child: Container(
+                    padding: const EdgeInsets.all(2),
+                    decoration: const BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black26,
+                          blurRadius: 6,
+                          offset: Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: const CircleAvatar(
+                      backgroundColor: Colors.white,
+                      radius: 18,
+                      child: Icon(Icons.person, color: Color(0xFF3B6FCC)),
+                    ),
                   ),
                 ),
               ),

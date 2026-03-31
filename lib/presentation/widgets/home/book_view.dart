@@ -1,10 +1,12 @@
 import 'dart:convert';
 import 'dart:async';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:http/http.dart' as http;
 import '../../../core/config/philippine_regions.dart';
+import '../../screens/rating_screen.dart';
 
 /// The booking tab widget on the Home screen.
 /// Shows an OpenStreetMap with FROM/TO address search, route drawing, and vehicle selection.
@@ -28,6 +30,13 @@ class BookViewState extends State<BookView> {
   double? _routeDistanceMeters;
   String _selectedVehicle = 'Motorcycle';
   final MapController _mapController = MapController();
+
+  // DRIVE SIMULATION STATE
+  bool _isSimulatingDrive = false;
+  LatLng? _animatedVehiclePos;
+  int _currentRouteIndex = 0;
+  Timer? _simulationTimer;
+  Map<String, dynamic>? _currentDriver;
 
   @override
   void initState() {
@@ -104,7 +113,7 @@ class BookViewState extends State<BookView> {
           ),
 
           // Search Bars (Visible in Booking Mode)
-          if (_isBookingMode)
+          if (_isBookingMode && !_isSimulatingDrive)
             Positioned(
               top: 20,
               left: 20,
@@ -119,7 +128,7 @@ class BookViewState extends State<BookView> {
             ),
 
           // Region indicator badge (Only in normal mode)
-          if (!_isBookingMode)
+          if (!_isBookingMode && !_isSimulatingDrive)
             Positioned(
               top: 16,
               left: 16,
@@ -157,14 +166,16 @@ class BookViewState extends State<BookView> {
             ),
 
           // Floating action button Area
-          Positioned(
-            bottom: 20,
-            left: 0,
-            right: 0,
-            child: Center(
-              child: _isBookingMode ? _buildVehicleButton() : _buildVanButton(),
+          if (!_isSimulatingDrive)
+            Positioned(
+              bottom: 20,
+              left: 0,
+              right: 0,
+              child: Center(
+                child:
+                    _isBookingMode ? _buildVehicleButton() : _buildVanButton(),
+              ),
             ),
-          ),
         ],
       ),
     );
@@ -178,6 +189,7 @@ class BookViewState extends State<BookView> {
     _fromController.dispose();
     _toController.dispose();
     _mapController.dispose();
+    _simulationTimer?.cancel();
     super.dispose();
   }
 
@@ -456,44 +468,89 @@ class BookViewState extends State<BookView> {
   }) {
     return GestureDetector(
       onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(15),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOutCubic,
+        transform: isSelected ? (Matrix4.identity()..scale(1.02)) : Matrix4.identity(),
+        padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
-          color: isSelected
-              ? const Color(0xFF4C8CFF).withValues(alpha: 0.1)
-              : Colors.white,
+          color: isSelected ? Colors.white : Colors.grey.shade50,
+          gradient: isSelected
+              ? const LinearGradient(
+                  colors: [Colors.white, Color(0xFFF0F5FF)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                )
+              : null,
+          borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected ? const Color(0xFF4C8CFF) : Colors.grey.shade300,
-            width: 2,
+            color: isSelected ? const Color(0xFF4C8CFF) : Colors.grey.shade200,
+            width: isSelected ? 2.5 : 1,
           ),
-          borderRadius: BorderRadius.circular(12),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: const Color(0xFF4C8CFF).withValues(alpha: 0.25),
+                    blurRadius: 15,
+                    offset: const Offset(0, 8),
+                  ),
+                ]
+              : [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.03),
+                    blurRadius: 5,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
         ),
         child: Row(
           children: [
-            Icon(
-              icon,
-              size: 30,
-              color: isSelected
-                  ? const Color(0xFF4C8CFF)
-                  : Colors.grey.shade700,
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? const Color(0xFF4C8CFF).withValues(alpha: 0.1)
+                    : Colors.white,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                icon,
+                size: 32,
+                color: isSelected ? const Color(0xFF4C8CFF) : Colors.grey.shade600,
+              ),
             ),
-            const SizedBox(width: 15),
+            const SizedBox(width: 18),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     title,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w900,
+                      fontSize: 17,
+                      color: isSelected ? const Color(0xFF1E3A8A) : Colors.black87,
+                      letterSpacing: 0.5,
                     ),
                   ),
+                  const SizedBox(height: 2),
                   Text(
-                    "Total Price: ₱${price.toStringAsFixed(2)}",
-                    style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+                    "Standard ride • Faster booking",
+                    style: TextStyle(
+                      color: Colors.grey.shade500,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                 ],
+              ),
+            ),
+            Text(
+              "₱${price.toStringAsFixed(0)}",
+              style: TextStyle(
+                fontWeight: FontWeight.w900,
+                fontSize: 22,
+                color: isSelected ? const Color(0xFF4C8CFF) : Colors.black87,
               ),
             ),
           ],
@@ -595,26 +652,43 @@ class BookViewState extends State<BookView> {
           const SizedBox(height: 15),
           // Proceed Button
           if (_routeDistanceMeters != null)
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF4C8CFF),
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
+            Padding(
+              padding: const EdgeInsets.only(top: 5),
+              child: SizedBox(
+                width: double.infinity,
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(15),
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF4C8CFF), Color(0xFF3B6FCC)],
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF4C8CFF).withValues(alpha: 0.4),
+                        blurRadius: 12,
+                        offset: const Offset(0, 5),
+                      ),
+                    ],
                   ),
-                ),
-                onPressed: () {
-                  // Currently dismisses booking mode
-                  setState(() => _isBookingMode = false);
-                },
-                child: const Text(
-                  "Book Now",
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.transparent,
+                      shadowColor: Colors.transparent,
+                      padding: const EdgeInsets.symmetric(vertical: 18),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                    ),
+                    onPressed: _handleBookNow,
+                    child: const Text(
+                      "CONFIRM BOOKING",
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w900,
+                        color: Colors.white,
+                        letterSpacing: 1.2,
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -622,6 +696,413 @@ class BookViewState extends State<BookView> {
         ],
       ),
     );
+  }
+
+  // --- MOCK DRIVER DATA & BOOKING FLOW ---
+
+  /// List of motorcycle drivers available for simulation.
+  /// Each driver includes name, rating, plate, vehicle model, description, and profile pic.
+  final List<Map<String, dynamic>> _motorcycleDrivers = [
+    {
+      'name': 'Lito Fast',
+      'rating': 4.8,
+      'plate': 'MC-101',
+      'vehicle': 'Honda Click - Black',
+      'desc': 'Quick and agile, perfect for traffic.',
+      'pic': 'https://robohash.org/LitoFast.png?set=set4',
+    },
+    {
+      'name': 'Maria Rider',
+      'rating': 4.9,
+      'plate': 'MC-202',
+      'vehicle': 'Yamaha NMAX - Blue',
+      'desc': 'Safe driving and very professional.',
+      'pic': 'https://robohash.org/MariaRider.png?set=set4',
+    },
+    {
+      'name': 'Jun Moto',
+      'rating': 4.7,
+      'plate': 'MC-303',
+      'vehicle': 'Suzuki Burgman - Silver',
+      'desc': 'Comfortable seat and smooth ride.',
+      'pic': 'https://robohash.org/JunMoto.png?set=set4',
+    },
+    {
+      'name': 'Rico Speed',
+      'rating': 4.6,
+      'plate': 'MC-404',
+      'vehicle': 'Kawasaki Ninja - Green',
+      'desc': 'Well-maintained bike and experienced rider.',
+      'pic': 'https://robohash.org/RicoSpeed.png?set=set4',
+    },
+    {
+      'name': 'Elena Cruz',
+      'rating': 5.0,
+      'plate': 'MC-505',
+      'vehicle': 'Honda Beat - Red',
+      'desc': 'Friendly and knows all the shortcuts.',
+      'pic': 'https://robohash.org/ElenaCruz.png?set=set4',
+    },
+  ];
+
+  final List<Map<String, dynamic>> _taxiDrivers = [
+    {
+      'name': 'Robert Driver',
+      'rating': 4.8,
+      'plate': 'TX-111',
+      'vehicle': 'Toyota Vios - White',
+      'desc': 'Clean interior and cool AC.',
+      'pic': 'https://robohash.org/RobertDriver.png?set=set4',
+    },
+    {
+      'name': 'Sally Cab',
+      'rating': 4.7,
+      'plate': 'TX-222',
+      'vehicle': 'Hyundai Accent - Black',
+      'desc': 'Quiet ride and helps with luggage.',
+      'pic': 'https://robohash.org/SallyCab.png?set=set4',
+    },
+    {
+      'name': 'Ben Taxi',
+      'rating': 4.5,
+      'plate': 'TX-333',
+      'vehicle': 'Honda City - Silver',
+      'desc': 'Punctual and follows navigation strictly.',
+      'pic': 'https://robohash.org/BenTaxi.png?set=set4',
+    },
+    {
+      'name': 'Fred Wheeler',
+      'rating': 4.9,
+      'plate': 'TX-444',
+      'vehicle': 'Toyota Corolla - White',
+      'desc': 'Premium feel and very spacious.',
+      'pic': 'https://robohash.org/FredWheeler.png?set=set4',
+    },
+    {
+      'name': 'Gloria Road',
+      'rating': 4.6,
+      'plate': 'TX-555',
+      'vehicle': 'Nissan Almera - Grey',
+      'desc': 'Soft-spoken and safe driver.',
+      'pic': 'https://robohash.org/GloriaRoad.png?set=set4',
+    },
+  ];
+
+  /// Initiates the booking process by showing a waiting dialog.
+  /// Once the 10-second timer completes, it triggers the driver assignment.
+  void _handleBookNow() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return _WaitingDialog(
+          onComplete: () {
+            Navigator.of(context).pop();
+            _showDriverAcceptedDialog();
+          },
+        );
+      },
+    );
+  }
+
+  /// Randomly selects a driver from the appropriate vehicle pool and shows an acceptance dialog.
+  /// The dialog displays driver details, vehicle info, and a "Proceed" button for the receipt.
+  void _showDriverAcceptedDialog() {
+    final random = Random();
+    final driverList =
+        _selectedVehicle == 'Motorcycle' ? _motorcycleDrivers : _taxiDrivers;
+    final driver = driverList[random.nextInt(driverList.length)];
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: const Row(
+            children: [
+              Icon(Icons.check_circle, color: Colors.green),
+              SizedBox(width: 10),
+              Text('Driver Found!'),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                driver['name'],
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  const Icon(Icons.star, color: Colors.orange, size: 20),
+                  Text(' ${driver['rating']} (Active Now)'),
+                ],
+              ),
+              const Divider(height: 24),
+              const Text(
+                'Vehicle:',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+              ),
+              Text(driver['vehicle']),
+              Text('Plate: ${driver['plate']}'),
+              const SizedBox(height: 8),
+              const Text(
+                'Description:',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+              ),
+              Text(
+                driver['desc'],
+                style: const TextStyle(fontStyle: FontStyle.italic),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                _showVirtualReceipt(driver);
+              },
+              child: const Text('PROCEED TO RECEIPT'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  /// Displays a detailed virtual receipt showing the driver info and route map.
+  /// Allows the user to initiate the drive simulation.
+  void _showVirtualReceipt(Map<String, dynamic> driver) {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (BuildContext context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            width: MediaQuery.of(context).size.width * 0.9,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [Icon(Icons.logout, size: 20)],
+                ),
+                const SizedBox(height: 10),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade300,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Center(
+                    child: Text(
+                      '#TEM-2026-X8',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.blueGrey,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 15),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      width: 120,
+                      height: 130,
+                      decoration: BoxDecoration(
+                        color: Colors.pink.shade50,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.pink.shade100),
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: Image.network(
+                          driver['pic'],
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) =>
+                              const Center(child: Icon(Icons.person, size: 50)),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        children: [
+                          Container(
+                            height: 48,
+                            width: double.infinity,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF2DFF81),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Center(
+                              child: Text(
+                                'RIDE RECEIPT',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          Container(
+                            height: 72,
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.cyan.shade100,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  driver['name'],
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                Text(
+                                  driver['vehicle'],
+                                  style: const TextStyle(fontSize: 10),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 15),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Container(
+                    height: 200,
+                    width: double.infinity,
+                    color: Colors.grey.shade200,
+                    child: Stack(
+                      children: [
+                        FlutterMap(
+                          options: MapOptions(
+                            initialCenter: _fromLatLng ?? const LatLng(10.33, 123.90),
+                            initialZoom: 13,
+                          ),
+                          children: [
+                            TileLayer(
+                              urlTemplate:
+                                  'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                            ),
+                            if (_routePoints.isNotEmpty)
+                              PolylineLayer(
+                                polylines: [
+                                  Polyline(
+                                    points: _routePoints,
+                                    color: Colors.blue.shade900,
+                                    strokeWidth: 4,
+                                  ),
+                                ],
+                              ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                const Text(
+                  '(MAP REFERENCE)',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey,
+                  ),
+                ),
+                const SizedBox(height: 15),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF4C8CFF),
+                      foregroundColor: Colors.white,
+                    ),
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      _currentDriver = driver;
+                      _startDriveSimulation();
+                    },
+                    child: const Text('SIMULATE DRIVE'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  /// Starts the animated drive simulation.
+  /// Moves the vehicle icon point-by-point along the fetched route and centers the map on it.
+  /// Navigates to the rating page upon arrival at the destination.
+  void _startDriveSimulation() {
+    if (_routePoints.isEmpty) {
+      _navigateToRating(_currentDriver!);
+      return;
+    }
+
+    setState(() {
+      _isSimulatingDrive = true;
+      _currentRouteIndex = 0;
+      _animatedVehiclePos = _routePoints[0];
+    });
+
+    _simulationTimer = Timer.periodic(const Duration(milliseconds: 100), (timer) {
+      if (_currentRouteIndex < _routePoints.length - 1) {
+        setState(() {
+          _currentRouteIndex++;
+          _animatedVehiclePos = _routePoints[_currentRouteIndex];
+          // Follow the vehicle with the map
+          _mapController.move(_animatedVehiclePos!, 14.5);
+        });
+      } else {
+        timer.cancel();
+        Future.delayed(const Duration(seconds: 1), () {
+          if (mounted) {
+            setState(() => _isSimulatingDrive = false);
+            _navigateToRating(_currentDriver!);
+          }
+        });
+      }
+    });
+  }
+
+  /// Displays the RatingDialog for the user to provide feedback for the driver.
+  /// Resets the booking UI states after the dialog is shown.
+  void _navigateToRating(Map<String, dynamic> driver) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => RatingDialog(
+        driverName: driver['name'],
+        vehicleInfo: "${driver['vehicle']} - ${driver['plate']}",
+        driverPic: driver['pic'],
+      ),
+    );
+
+    cancelBooking();
   }
 
   /// Builds the OpenStreetMap widget with route polyline and location markers.
@@ -649,6 +1130,34 @@ class BookViewState extends State<BookView> {
           width: 44,
           height: 44,
           child: const Icon(Icons.location_on, color: Colors.grey, size: 40),
+        ),
+
+      // ANIMATED VEHICLE ICON
+      if (_isSimulatingDrive && _animatedVehiclePos != null)
+        Marker(
+          point: _animatedVehiclePos!,
+          width: 60,
+          height: 60,
+          child: Container(
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black26,
+                  blurRadius: 10,
+                  offset: Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Icon(
+              _selectedVehicle == 'Motorcycle'
+                  ? Icons.two_wheeler
+                  : Icons.local_taxi,
+              color: const Color(0xFF4C8CFF),
+              size: 35,
+            ),
+          ),
         ),
     ];
 
@@ -941,6 +1450,128 @@ class _AddressSearchBottomSheetState extends State<_AddressSearchBottomSheet> {
                   },
                 ),
               ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _WaitingDialog extends StatefulWidget {
+  final VoidCallback onComplete;
+  const _WaitingDialog({required this.onComplete});
+
+  @override
+  State<_WaitingDialog> createState() => _WaitingDialogState();
+}
+
+class _WaitingDialogState extends State<_WaitingDialog> {
+  int _secondsRemaining = 10;
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _startTimer();
+  }
+
+  void _startTimer() {
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (_secondsRemaining > 0) {
+        setState(() {
+          _secondsRemaining--;
+        });
+      } else {
+        _timer?.cancel();
+        widget.onComplete();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
+      elevation: 20,
+      backgroundColor: Colors.white,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 25),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Stack(
+              alignment: Alignment.center,
+              children: [
+                SizedBox(
+                  width: 80,
+                  height: 80,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 6,
+                    valueColor:
+                        const AlwaysStoppedAnimation<Color>(Color(0xFF4C8CFF)),
+                    backgroundColor: Colors.grey.shade100,
+                  ),
+                ),
+                const Icon(
+                  Icons.location_searching,
+                  color: Color(0xFF4C8CFF),
+                  size: 35,
+                ),
+              ],
+            ),
+            const SizedBox(height: 30),
+            const Text(
+              'FINDING YOUR RIDE',
+              style: TextStyle(
+                fontWeight: FontWeight.w900,
+                fontSize: 20,
+                letterSpacing: 2.5,
+                color: Color(0xFF1E3A8A),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Searching for nearby drivers...',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Colors.grey.shade500,
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 35),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              decoration: BoxDecoration(
+                color: const Color(0xFF4C8CFF).withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    Icons.timer_outlined,
+                    size: 20,
+                    color: Color(0xFF4C8CFF),
+                  ),
+                  const SizedBox(width: 10),
+                  Text(
+                    '$_secondsRemaining s',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w900,
+                      fontSize: 24,
+                      color: Color(0xFF4C8CFF),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ],
         ),
       ),

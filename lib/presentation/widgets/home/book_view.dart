@@ -37,6 +37,32 @@ class BookViewState extends State<BookView> {
   int _currentRouteIndex = 0;
   Timer? _simulationTimer;
   Map<String, dynamic>? _currentDriver;
+  bool _showHistory = true;
+  bool _hasSelectedVehicle = false; // Tracks if user explicitly chose a vehicle
+
+  final List<Map<String, dynamic>> _rideHistory = [
+    {
+      'fromName': 'IT Park, Lahug',
+      'fromCoords': const LatLng(10.3297, 123.9061),
+      'toName': 'SM City Cebu',
+      'toCoords': const LatLng(10.3117, 123.9183),
+      'date': 'Yesterday',
+    },
+    {
+      'fromName': 'Ayala Center',
+      'fromCoords': const LatLng(10.3178, 123.9050),
+      'toName': 'Mactan Airport',
+      'toCoords': const LatLng(10.3060, 123.9790),
+      'date': '2 days ago',
+    },
+    {
+      'fromName': 'Colon Street',
+      'fromCoords': const LatLng(10.2977, 123.8996),
+      'toName': 'Fuente Osmeña',
+      'toCoords': const LatLng(10.3114, 123.8938),
+      'date': 'Last week',
+    },
+  ];
 
   @override
   void initState() {
@@ -72,62 +98,174 @@ class BookViewState extends State<BookView> {
       _routeDistanceMeters = null;
       _fromController.clear();
       _toController.clear();
+      _showHistory = true; // Ensure history shows again for next booking
+      _hasSelectedVehicle = false; // Reset vehicle choice
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    double screenHeight = MediaQuery.of(context).size.height;
+    // Map takes 75% of height in booking mode, 100% otherwise
+    bool isDetailsMode = _isBookingMode && !_isSimulatingDrive;
+    // Lengthened mapCard both ways: lower top padding and lower bottom lift
+    double mapBottomPadding = isDetailsMode ? screenHeight * 0.16 : 0;
+    double mapTopPadding = isDetailsMode ? 70 : 0; // Much lower top padding
+    double sidePadding = isDetailsMode ? 15 : 0; // Added side padding back
+
     return Container(
-      color: Colors.white, // Background behind the shrunk map
+      color: Colors.white,
       child: Stack(
+        clipBehavior: Clip.none,
         children: [
-          // Shrunk Map with Animation
+          // 1. Animated Map with 75/25 split
           AnimatedPadding(
-            duration: const Duration(milliseconds: 400),
-            curve: Curves.easeInOut,
-            padding: _isBookingMode
-                ? const EdgeInsets.only(
-                    top: 130,
-                    bottom: 160,
-                    left: 20,
-                    right: 20,
-                  )
-                : EdgeInsets.zero,
+            duration: const Duration(milliseconds: 600),
+            curve: Curves.fastOutSlowIn,
+            padding: EdgeInsets.only(
+              top: mapTopPadding,
+              bottom: mapBottomPadding,
+              left: sidePadding,
+              right: sidePadding,
+            ),
             child: Container(
-              decoration: _isBookingMode
+              decoration: isDetailsMode
                   ? BoxDecoration(
-                      border: Border.all(
-                        color: Colors.grey.shade300,
-                        width: 1.5,
-                      ),
-                      borderRadius: BorderRadius.circular(5),
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: Colors.grey.shade200),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.1),
+                          blurRadius: 15,
+                          offset: const Offset(0, 5),
+                        ),
+                      ],
                     )
                   : null,
               child: ClipRRect(
-                borderRadius: _isBookingMode
-                    ? BorderRadius.circular(5)
+                borderRadius: isDetailsMode
+                    ? BorderRadius.circular(20)
                     : BorderRadius.zero,
                 child: _buildOSMMap(),
               ),
             ),
           ),
 
-          // Search Bars (Visible in Booking Mode)
-          if (_isBookingMode && !_isSimulatingDrive)
+          // 2. Bottom Panel Background (White Sheet)
+          if (isDetailsMode)
             Positioned(
-              top: 20,
+              bottom: 0,
+              left: 0,
+              right: 0,
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 600),
+                height: isDetailsMode
+                    ? screenHeight * 0.16
+                    : 0, // Increased height to avoid overflow
+                curve: Curves.fastOutSlowIn,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(25),
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.08),
+                      blurRadius: 20,
+                      offset: const Offset(0, -10),
+                    ),
+                  ],
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.only(
+                    top: 38.0,
+                  ), // Slightly reduced to fit booking button better
+                  child: _buildVehicleButton(),
+                ),
+              ),
+            ),
+
+          // 3. Floating Van Bubble Positioned relative to map bottom center
+          if (!_isSimulatingDrive)
+            AnimatedPositioned(
+              duration: const Duration(milliseconds: 600),
+              curve: Curves.fastOutSlowIn,
+              bottom: isDetailsMode
+                  ? (screenHeight * 0.16 -
+                        37.5) // Re-centered on the adjusted 16% edge
+                  : 40, // Normal floating position
+              left: 0,
+              right: 0,
+              child: Center(
+                child: isDetailsMode
+                    ? Hero(tag: 'van-btn', child: _buildVanButton())
+                    : _buildVanButton(),
+              ),
+            ),
+
+          // 4. Search Bars (Visible in Booking Mode)
+          if (isDetailsMode)
+            Positioned(
+              top: 25,
               left: 20,
               right: 20,
               child: Column(
                 children: [
-                  _buildSearchInput("FROM:", _fromController),
-                  const SizedBox(height: 10),
-                  _buildSearchInput("TO:", _toController),
+                  Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      Column(
+                        children: [
+                          _buildSearchInput("FROM:", _fromController),
+                          const SizedBox(
+                            height: 40,
+                          ), // Increased space so button doesn't touch bars
+                          _buildSearchInput("TO:", _toController),
+                        ],
+                      ),
+                      // Reverse / Swap Button
+                      Positioned(
+                        top:
+                            49, // (45 from top search bar + (40 gap - 32 button height)/2)
+                        left: 0,
+                        right: 0,
+                        child: Center(
+                          child: GestureDetector(
+                            onTap: _swapAddresses,
+                            child: Container(
+                              height: 32,
+                              width: 32,
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                shape: BoxShape.circle,
+                                border: Border.all(color: Colors.grey.shade200),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.1),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              child: const Icon(
+                                Icons.swap_vert,
+                                color: Color(0xFF4C8CFF),
+                                size: 20,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  if (_showHistory && _routePoints.isEmpty)
+                    _buildHistorySection(),
                 ],
               ),
             ),
 
-          // Region indicator badge (Only in normal mode)
+          // 5. Region indicator badge (Only in normal mode)
           if (!_isBookingMode && !_isSimulatingDrive)
             Positioned(
               top: 16,
@@ -164,18 +302,6 @@ class BookViewState extends State<BookView> {
                 ),
               ),
             ),
-
-          // Floating action button Area
-          if (!_isSimulatingDrive)
-            Positioned(
-              bottom: 20,
-              left: 0,
-              right: 0,
-              child: Center(
-                child:
-                    _isBookingMode ? _buildVehicleButton() : _buildVanButton(),
-              ),
-            ),
         ],
       ),
     );
@@ -183,6 +309,28 @@ class BookViewState extends State<BookView> {
 
   final TextEditingController _fromController = TextEditingController();
   final TextEditingController _toController = TextEditingController();
+
+  /// Swaps the FROM and TO locations, updating text controllers, coordinates, and route.
+  void _swapAddresses() {
+    if (_fromController.text.isEmpty && _toController.text.isEmpty) return;
+    setState(() {
+      final String tempText = _fromController.text;
+      _fromController.text = _toController.text;
+      _toController.text = tempText;
+
+      final LatLng? tempLatLng = _fromLatLng;
+      _fromLatLng = _toLatLng;
+      _toLatLng = tempLatLng;
+
+      // Re-fetch route if both are now set
+      if (_fromLatLng != null && _toLatLng != null) {
+        _fetchRoute();
+      } else {
+        _routePoints = [];
+        _routeDistanceMeters = null;
+      }
+    });
+  }
 
   @override
   void dispose() {
@@ -210,6 +358,7 @@ class BookViewState extends State<BookView> {
         label: label,
         initialText: controller.text,
         region: currentRegion,
+        rideHistory: _rideHistory,
         onSelected: (address, coords) {
           setState(() {
             controller.text = address;
@@ -370,26 +519,98 @@ class BookViewState extends State<BookView> {
     );
   }
 
+  /// Builds the "Recent Rides" section as a compact, integrated list.
+  Widget _buildHistorySection() {
+    return Column(
+      children: [
+        const SizedBox(height: 8),
+        ..._rideHistory.take(2).map((ride) => _buildHistoryItem(ride)),
+      ],
+    );
+  }
+
+  /// Builds a single history item row.
+  Widget _buildHistoryItem(Map<String, dynamic> ride) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 6),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.92),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: InkWell(
+        onTap: () {
+          setState(() {
+            _fromController.text = ride['fromName'];
+            _fromLatLng = ride['fromCoords'];
+            _toController.text = ride['toName'];
+            _toLatLng = ride['toCoords'];
+            _fetchRoute();
+            _showHistory = false;
+          });
+        },
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          child: Row(
+            children: [
+              const Icon(Icons.history, size: 14, color: Colors.blueGrey),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  "${ride['fromName']} → ${ride['toName']}",
+                  style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black87,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const Icon(Icons.chevron_right, size: 14, color: Colors.grey),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   /// Builds the circular van/truck button that triggers booking mode when tapped.
   Widget _buildVanButton() {
+    IconData displayIcon;
+    if (!_isBookingMode || !_hasSelectedVehicle) {
+      displayIcon = Icons.local_shipping;
+    } else {
+      displayIcon = _selectedVehicle == 'Motorcycle'
+          ? Icons.two_wheeler
+          : Icons.local_taxi;
+    }
+
     return GestureDetector(
-      onTap: () => setState(() => _isBookingMode = true),
+      onTap: () {
+        if (!_isBookingMode) {
+          setState(() => _isBookingMode = true);
+        } else {
+          _showVehicleSelectionDialog();
+        }
+      },
       child: Container(
         width: 75,
         height: 75,
         decoration: BoxDecoration(
-          color: const Color(0xFF4C8CFF),
+          gradient: const LinearGradient(
+            colors: [Color(0xFF4C8CFF), Color(0xFF3B6FCC)],
+          ),
           shape: BoxShape.circle,
-          border: Border.all(color: Colors.black, width: 2),
-          boxShadow: const [
+          boxShadow: [
             BoxShadow(
-              color: Colors.black26,
-              blurRadius: 10,
-              offset: Offset(0, 4),
+              color: const Color(0xFF4C8CFF).withValues(alpha: 0.4),
+              blurRadius: 15,
+              offset: const Offset(0, 8),
             ),
           ],
+          border: Border.all(color: Colors.white, width: 4),
         ),
-        child: const Icon(Icons.local_shipping, color: Colors.white, size: 45),
+        child: Icon(displayIcon, color: Colors.white, size: 40),
       ),
     );
   }
@@ -408,9 +629,9 @@ class BookViewState extends State<BookView> {
           builder: (BuildContext context, StateSetter setModalState) {
             double distanceKm = (_routeDistanceMeters ?? 0) / 1000;
 
-            // Initial pay + Variable per km
-            double motoPrice = 15.0 + (distanceKm * 10.0);
-            double taxiPrice = 80.0 + (distanceKm * 15.0);
+            // Initial pay + Variable (Motorcycle: 5 per 100m = 50 per km)
+            double motoPrice = 15.0 + (distanceKm * 50.0);
+            double taxiPrice = 80.0; // Taxi runs on time, no per-km rate
 
             return Padding(
               padding: const EdgeInsets.all(20.0),
@@ -430,7 +651,10 @@ class BookViewState extends State<BookView> {
                     price: motoPrice,
                     isSelected: _selectedVehicle == "Motorcycle",
                     onTap: () {
-                      setState(() => _selectedVehicle = "Motorcycle");
+                      setState(() {
+                        _selectedVehicle = "Motorcycle";
+                        _hasSelectedVehicle = true;
+                      });
                       setModalState(() {});
                       Navigator.pop(ctx);
                     },
@@ -443,7 +667,10 @@ class BookViewState extends State<BookView> {
                     price: taxiPrice,
                     isSelected: _selectedVehicle == "Taxi",
                     onTap: () {
-                      setState(() => _selectedVehicle = "Taxi");
+                      setState(() {
+                        _selectedVehicle = "Taxi";
+                        _hasSelectedVehicle = true;
+                      });
                       setModalState(() {});
                       Navigator.pop(ctx);
                     },
@@ -471,7 +698,9 @@ class BookViewState extends State<BookView> {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeOutCubic,
-        transform: isSelected ? (Matrix4.identity()..scale(1.02)) : Matrix4.identity(),
+        transform: isSelected
+            ? (Matrix4.identity()..scale(1.02))
+            : Matrix4.identity(),
         padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
           color: isSelected ? Colors.white : Colors.grey.shade50,
@@ -516,7 +745,9 @@ class BookViewState extends State<BookView> {
               child: Icon(
                 icon,
                 size: 32,
-                color: isSelected ? const Color(0xFF4C8CFF) : Colors.grey.shade600,
+                color: isSelected
+                    ? const Color(0xFF4C8CFF)
+                    : Colors.grey.shade600,
               ),
             ),
             const SizedBox(width: 18),
@@ -529,7 +760,9 @@ class BookViewState extends State<BookView> {
                     style: TextStyle(
                       fontWeight: FontWeight.w900,
                       fontSize: 17,
-                      color: isSelected ? const Color(0xFF1E3A8A) : Colors.black87,
+                      color: isSelected
+                          ? const Color(0xFF1E3A8A)
+                          : Colors.black87,
                       letterSpacing: 0.5,
                     ),
                   ),
@@ -565,9 +798,9 @@ class BookViewState extends State<BookView> {
     double distanceKm = (_routeDistanceMeters ?? 0) / 1000;
     double price = 0.0;
     if (_selectedVehicle == 'Motorcycle') {
-      price = 15.0 + (distanceKm * 10.0);
+      price = 15.0 + (distanceKm * 50.0);
     } else {
-      price = 80.0 + (distanceKm * 15.0);
+      price = 80.0; // Taxi runs on time, no per-km rate
     }
 
     return Padding(
@@ -575,119 +808,97 @@ class BookViewState extends State<BookView> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          GestureDetector(
-            onTap: _showVehicleSelectionDialog,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(15),
-                border: Border.all(color: Colors.grey.shade300, width: 1.5),
-                boxShadow: const [
-                  BoxShadow(
-                    color: Colors.black12,
-                    blurRadius: 10,
-                    offset: Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  Icon(
-                    _selectedVehicle == 'Motorcycle'
-                        ? Icons.two_wheeler
-                        : Icons.local_taxi,
-                    color: const Color(0xFF4C8CFF),
-                    size: 32,
-                  ),
-                  const SizedBox(width: 15),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          _selectedVehicle,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                          ),
-                        ),
-                        if (_routeDistanceMeters != null)
-                          Text(
-                            "${distanceKm.toStringAsFixed(1)} km",
-                            style: TextStyle(
-                              color: Colors.grey.shade600,
-                              fontSize: 12,
-                            ),
-                          )
-                        else
-                          Text(
-                            "Select destinations",
-                            style: TextStyle(
-                              color: Colors.grey.shade600,
-                              fontSize: 12,
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-                  Row(
-                    children: [
-                      if (_routeDistanceMeters != null)
-                        Text(
-                          "₱${price.toStringAsFixed(2)}",
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 20,
-                            color: Color(0xFF4C8CFF),
-                          ),
-                        ),
-                      const Icon(Icons.keyboard_arrow_down, color: Colors.grey),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 15),
-          // Proceed Button
+          // Simplified trip details instead of the big selection box
           if (_routeDistanceMeters != null)
             Padding(
-              padding: const EdgeInsets.only(top: 5),
-              child: SizedBox(
-                width: double.infinity,
-                child: Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(15),
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFF4C8CFF), Color(0xFF3B6FCC)],
+              padding: const EdgeInsets.only(bottom: 12.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    "${distanceKm.toStringAsFixed(1)} KM",
+                    style: TextStyle(
+                      color: Colors.grey.shade600,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                      letterSpacing: 1.1,
                     ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFF4C8CFF).withValues(alpha: 0.4),
-                        blurRadius: 12,
-                        offset: const Offset(0, 5),
-                      ),
-                    ],
                   ),
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.transparent,
-                      shadowColor: Colors.transparent,
-                      padding: const EdgeInsets.symmetric(vertical: 18),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(15),
+                  if (_hasSelectedVehicle) ...[
+                    Container(
+                      width: 4,
+                      height: 4,
+                      margin: const EdgeInsets.symmetric(horizontal: 10),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade400,
+                        shape: BoxShape.circle,
                       ),
                     ),
-                    onPressed: _handleBookNow,
-                    child: const Text(
-                      "CONFIRM BOOKING",
-                      style: TextStyle(
-                        fontSize: 16,
+                    Text(
+                      "₱${price.toStringAsFixed(2)}",
+                      style: const TextStyle(
                         fontWeight: FontWeight.w900,
-                        color: Colors.white,
-                        letterSpacing: 1.2,
+                        fontSize: 18,
+                        color: Color(0xFF4C8CFF),
                       ),
+                    ),
+                  ],
+                ],
+              ),
+            )
+          else
+            const Padding(
+              padding: EdgeInsets.only(bottom: 15),
+              child: Text(
+                "SELECT DESTINATIONS",
+                style: TextStyle(
+                  color: Colors.grey,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                  letterSpacing: 1.1,
+                ),
+              ),
+            ),
+
+          // Proceed Button
+          if (_routeDistanceMeters != null && _hasSelectedVehicle)
+            Padding(
+              padding: const EdgeInsets.only(
+                top: 5,
+                right: 65,
+              ), // Leave space for FloatingActionButton
+              child: Container(
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(15),
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF4C8CFF), Color(0xFF3B6FCC)],
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF4C8CFF).withValues(alpha: 0.4),
+                      blurRadius: 12,
+                      offset: const Offset(0, 5),
+                    ),
+                  ],
+                ),
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.transparent,
+                    shadowColor: Colors.transparent,
+                    padding: const EdgeInsets.symmetric(vertical: 18),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(15),
+                    ),
+                  ),
+                  onPressed: _handleBookNow,
+                  child: const Text(
+                    "CONFIRM BOOKING",
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w900,
+                      color: Colors.white,
+                      letterSpacing: 1.2,
                     ),
                   ),
                 ),
@@ -809,8 +1020,9 @@ class BookViewState extends State<BookView> {
   /// The dialog displays driver details, vehicle info, and a "Proceed" button for the receipt.
   void _showDriverAcceptedDialog() {
     final random = Random();
-    final driverList =
-        _selectedVehicle == 'Motorcycle' ? _motorcycleDrivers : _taxiDrivers;
+    final driverList = _selectedVehicle == 'Motorcycle'
+        ? _motorcycleDrivers
+        : _taxiDrivers;
     final driver = driverList[random.nextInt(driverList.length)];
 
     showDialog(
@@ -818,8 +1030,9 @@ class BookViewState extends State<BookView> {
       barrierDismissible: false,
       builder: (BuildContext context) {
         return AlertDialog(
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
           title: const Row(
             children: [
               Icon(Icons.check_circle, color: Colors.green),
@@ -833,7 +1046,10 @@ class BookViewState extends State<BookView> {
             children: [
               Text(
                 driver['name'],
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                ),
               ),
               const SizedBox(height: 8),
               Row(
@@ -864,6 +1080,22 @@ class BookViewState extends State<BookView> {
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop();
+              },
+              child: Text(
+                'CANCEL',
+                style: TextStyle(color: Colors.red.shade400),
+              ),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF4C8CFF),
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              onPressed: () {
+                Navigator.of(context).pop();
                 _showVirtualReceipt(driver);
               },
               child: const Text('PROCEED TO RECEIPT'),
@@ -882,7 +1114,9 @@ class BookViewState extends State<BookView> {
       barrierDismissible: true,
       builder: (BuildContext context) {
         return Dialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(15),
+          ),
           child: Container(
             padding: const EdgeInsets.all(16),
             width: MediaQuery.of(context).size.width * 0.9,
@@ -987,6 +1221,71 @@ class BookViewState extends State<BookView> {
                   ],
                 ),
                 const SizedBox(height: 15),
+                // Distance and Total section
+                Row(
+                  children: [
+                    Expanded(
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        decoration: BoxDecoration(
+                          color: Colors.orange.shade50,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: Colors.orange.shade100),
+                        ),
+                        child: Column(
+                          children: [
+                            const Text(
+                              'DISTANCE',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.orange,
+                              ),
+                            ),
+                            Text(
+                              '${((_routeDistanceMeters ?? 0) / 1000).toStringAsFixed(2)} km',
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        decoration: BoxDecoration(
+                          color: Colors.green.shade50,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: Colors.green.shade100),
+                        ),
+                        child: Column(
+                          children: [
+                            const Text(
+                              'TOTAL DUE',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.green,
+                              ),
+                            ),
+                            Text(
+                              '₱${(_selectedVehicle == 'Motorcycle' ? (15.0 + ((_routeDistanceMeters ?? 0) / 1000) * 10.0) : (80.0 + ((_routeDistanceMeters ?? 0) / 1000) * 15.0)).toStringAsFixed(2)}',
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 15),
                 ClipRRect(
                   borderRadius: BorderRadius.circular(8),
                   child: Container(
@@ -997,7 +1296,8 @@ class BookViewState extends State<BookView> {
                       children: [
                         FlutterMap(
                           options: MapOptions(
-                            initialCenter: _fromLatLng ?? const LatLng(10.33, 123.90),
+                            initialCenter:
+                                _fromLatLng ?? const LatLng(10.33, 123.90),
                             initialZoom: 13,
                           ),
                           children: [
@@ -1037,13 +1337,33 @@ class BookViewState extends State<BookView> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF4C8CFF),
                       foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
                     ),
                     onPressed: () {
                       Navigator.of(context).pop();
                       _currentDriver = driver;
                       _startDriveSimulation();
                     },
-                    child: const Text('SIMULATE DRIVE'),
+                    child: const Text(
+                      'SIMULATE DRIVE',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: Text(
+                    'CANCEL ORDER',
+                    style: TextStyle(
+                      color: Colors.red.shade400,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
               ],
@@ -1069,7 +1389,9 @@ class BookViewState extends State<BookView> {
       _animatedVehiclePos = _routePoints[0];
     });
 
-    _simulationTimer = Timer.periodic(const Duration(milliseconds: 100), (timer) {
+    _simulationTimer = Timer.periodic(const Duration(milliseconds: 100), (
+      timer,
+    ) {
       if (_currentRouteIndex < _routePoints.length - 1) {
         setState(() {
           _currentRouteIndex++;
@@ -1107,14 +1429,14 @@ class BookViewState extends State<BookView> {
 
   /// Builds the OpenStreetMap widget with route polyline and location markers.
   Widget _buildOSMMap() {
-    // Build marker list: FROM pin (red) + TO pin (blue)
+    // Build marker list: FROM pin (green) + TO pin (red)
     final markers = <Marker>[
       if (_fromLatLng != null)
         Marker(
           point: _fromLatLng!,
           width: 44,
           height: 44,
-          child: const Icon(Icons.location_on, color: Colors.red, size: 40),
+          child: const Icon(Icons.location_on, color: Colors.green, size: 40),
         ),
       if (_toLatLng != null)
         Marker(
@@ -1213,12 +1535,14 @@ class _AddressSearchBottomSheet extends StatefulWidget {
   final String label;
   final String initialText;
   final PhilippineRegion region;
+  final List<Map<String, dynamic>> rideHistory;
   final Function(String address, LatLng coords) onSelected;
 
   const _AddressSearchBottomSheet({
     required this.label,
     required this.initialText,
     required this.region,
+    required this.rideHistory,
     required this.onSelected,
   });
 
@@ -1422,32 +1746,73 @@ class _AddressSearchBottomSheetState extends State<_AddressSearchBottomSheet> {
               )
             else
               Expanded(
-                child: ListView.builder(
-                  itemCount: _suggestions.length,
-                  itemBuilder: (context, index) {
-                    final item = _suggestions[index];
-                    final address = item['display_name'] ?? '';
-                    return ListTile(
-                      leading: const Icon(
-                        Icons.location_on,
-                        color: Colors.grey,
+                child: ListView(
+                  children: [
+                    if (_controller.text.isEmpty &&
+                        widget.rideHistory.isNotEmpty) ...[
+                      const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 10),
+                        child: Text(
+                          'RECENT RIDES',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.blueGrey,
+                            letterSpacing: 1.2,
+                          ),
+                        ),
                       ),
-                      title: Text(
-                        address,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontSize: 14),
-                      ),
-                      onTap: () {
-                        final lat =
-                            double.tryParse(item['lat'].toString()) ?? 0.0;
-                        final lon =
-                            double.tryParse(item['lon'].toString()) ?? 0.0;
-                        widget.onSelected(address, LatLng(lat, lon));
-                        Navigator.pop(context);
-                      },
-                    );
-                  },
+                      ...widget.rideHistory.map((ride) {
+                        final address = widget.label == 'FROM:'
+                            ? ride['fromName']
+                            : ride['toName'];
+                        final coords = widget.label == 'FROM:'
+                            ? ride['fromCoords']
+                            : ride['toCoords'];
+                        return ListTile(
+                          contentPadding: EdgeInsets.zero,
+                          leading: const Icon(
+                            Icons.history,
+                            color: Colors.blueGrey,
+                            size: 20,
+                          ),
+                          title: Text(
+                            address,
+                            style: const TextStyle(fontSize: 14),
+                          ),
+                          onTap: () {
+                            widget.onSelected(address, coords);
+                            Navigator.pop(context);
+                          },
+                        );
+                      }),
+                      const Divider(height: 30),
+                    ],
+                    ..._suggestions.map((item) {
+                      final address = item['display_name'] ?? '';
+                      return ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        leading: const Icon(
+                          Icons.location_on,
+                          color: Colors.grey,
+                        ),
+                        title: Text(
+                          address,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(fontSize: 14),
+                        ),
+                        onTap: () {
+                          final lat =
+                              double.tryParse(item['lat'].toString()) ?? 0.0;
+                          final lon =
+                              double.tryParse(item['lon'].toString()) ?? 0.0;
+                          widget.onSelected(address, LatLng(lat, lon));
+                          Navigator.pop(context);
+                        },
+                      );
+                    }),
+                  ],
                 ),
               ),
           ],
@@ -1513,8 +1878,9 @@ class _WaitingDialogState extends State<_WaitingDialog> {
                   height: 80,
                   child: CircularProgressIndicator(
                     strokeWidth: 6,
-                    valueColor:
-                        const AlwaysStoppedAnimation<Color>(Color(0xFF4C8CFF)),
+                    valueColor: const AlwaysStoppedAnimation<Color>(
+                      Color(0xFF4C8CFF),
+                    ),
                     backgroundColor: Colors.grey.shade100,
                   ),
                 ),
@@ -1570,6 +1936,21 @@ class _WaitingDialogState extends State<_WaitingDialog> {
                     ),
                   ),
                 ],
+              ),
+            ),
+            const SizedBox(height: 25),
+            TextButton(
+              onPressed: () {
+                _timer?.cancel();
+                Navigator.of(context).pop();
+              },
+              child: Text(
+                'CANCEL REQUEST',
+                style: TextStyle(
+                  color: Colors.red.shade400,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 1.2,
+                ),
               ),
             ),
           ],

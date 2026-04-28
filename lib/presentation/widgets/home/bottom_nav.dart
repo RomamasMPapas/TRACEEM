@@ -29,15 +29,28 @@ class CustomBottomNav extends StatelessWidget {
                 child: GestureDetector(
                   onTap: () => onTabSelected(0),
                   child: Center(
-                    child: Text(
-                      'BOOK',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w900,
-                        fontSize: 18,
-                        color: currentIndex == 0
-                            ? Colors.black
-                            : Colors.grey[400],
-                      ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.local_shipping,
+                          size: 20,
+                          color: currentIndex == 0
+                              ? Colors.black
+                              : Colors.grey[400],
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'BOOK',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w900,
+                            fontSize: 18,
+                            color: currentIndex == 0
+                                ? Colors.black
+                                : Colors.grey[400],
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -46,15 +59,28 @@ class CustomBottomNav extends StatelessWidget {
                 child: GestureDetector(
                   onTap: () => onTabSelected(1),
                   child: Center(
-                    child: Text(
-                      'TRACK',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w900,
-                        fontSize: 18,
-                        color: currentIndex == 1
-                            ? Colors.black
-                            : Colors.grey[400],
-                      ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.location_on,
+                          size: 20,
+                          color: currentIndex == 1
+                              ? Colors.black
+                              : Colors.grey[400],
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'TRACK',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w900,
+                            fontSize: 18,
+                            color: currentIndex == 1
+                                ? Colors.black
+                                : Colors.grey[400],
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),

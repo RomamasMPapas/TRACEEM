@@ -62,10 +62,12 @@ class _RatingsPageState extends State<RatingsPage> {
   void _filterRatings(String query) {
     setState(() {
       _filteredRatings = _allRatings
-          .where((r) =>
-              r['driver'].toLowerCase().contains(query.toLowerCase()) ||
-              r['user'].toLowerCase().contains(query.toLowerCase()) ||
-              r['vehicle'].toLowerCase().contains(query.toLowerCase()))
+          .where(
+            (r) =>
+                r['driver'].toLowerCase().contains(query.toLowerCase()) ||
+                r['user'].toLowerCase().contains(query.toLowerCase()) ||
+                r['vehicle'].toLowerCase().contains(query.toLowerCase()),
+          )
           .toList();
     });
   }
@@ -95,6 +97,11 @@ class _RatingsPageState extends State<RatingsPage> {
             itemCount: _filteredRatings.length,
             itemBuilder: (context, index) {
               final rating = _filteredRatings[index];
+              final int ratingValue = rating['rating'] as int;
+              final Color ratingColor = ratingValue > 3
+                  ? Colors.green
+                  : (ratingValue == 3 ? Colors.amber : Colors.red);
+
               return Card(
                 margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 shape: RoundedRectangleBorder(
@@ -108,9 +115,7 @@ class _RatingsPageState extends State<RatingsPage> {
                     decoration: BoxDecoration(
                       border: Border(
                         left: BorderSide(
-                          color: rating['rating'] >= 4
-                              ? Colors.green
-                              : (rating['rating'] >= 3 ? Colors.orange : Colors.red),
+                          color: ratingColor,
                           width: 6,
                         ),
                       ),
@@ -131,20 +136,27 @@ class _RatingsPageState extends State<RatingsPage> {
                               ),
                             ),
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
+                              ),
                               decoration: BoxDecoration(
-                                color: Colors.orange.withValues(alpha: 0.1),
+                                color: ratingColor.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(20),
                               ),
                               child: Row(
                                 children: [
-                                  const Icon(Icons.star, color: Colors.orange, size: 16),
+                                  Icon(
+                                    Icons.star,
+                                    color: ratingColor,
+                                    size: 16,
+                                  ),
                                   const SizedBox(width: 4),
                                   Text(
-                                    rating['rating'].toString(),
-                                    style: const TextStyle(
+                                    ratingValue.toString(),
+                                    style: TextStyle(
                                       fontWeight: FontWeight.bold,
-                                      color: Colors.orange,
+                                      color: ratingColor,
                                     ),
                                   ),
                                 ],
@@ -155,7 +167,11 @@ class _RatingsPageState extends State<RatingsPage> {
                         const SizedBox(height: 6),
                         Row(
                           children: [
-                            Icon(Icons.person_outline, size: 14, color: Colors.grey.shade600),
+                            Icon(
+                              Icons.person_outline,
+                              size: 14,
+                              color: Colors.grey.shade600,
+                            ),
                             const SizedBox(width: 4),
                             Text(
                               '${rating['user']}',
@@ -166,9 +182,16 @@ class _RatingsPageState extends State<RatingsPage> {
                               ),
                             ),
                             const SizedBox(width: 8),
-                            Text('•', style: TextStyle(color: Colors.grey.shade400)),
+                            Text(
+                              '•',
+                              style: TextStyle(color: Colors.grey.shade400),
+                            ),
                             const SizedBox(width: 8),
-                            Icon(Icons.directions_car_outlined, size: 14, color: Colors.grey.shade600),
+                            Icon(
+                              Icons.directions_car_outlined,
+                              size: 14,
+                              color: Colors.grey.shade600,
+                            ),
                             const SizedBox(width: 4),
                             Text(
                               '${rating['vehicle']}',

@@ -5,6 +5,10 @@ import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import '../../firebase_options.dart';
 
 /// Background service responsible for periodically sending the user's GPS location
 /// to the TRACE EM tracking API while the app is running.
@@ -49,37 +53,48 @@ class TrackingService {
   @pragma('vm:entry-point')
   static void onStart(ServiceInstance service) async {
     DartPluginRegistrant.ensureInitialized();
+    WidgetsFlutterBinding.ensureInitialized();
+
+    // Initialize Dotenv and Firebase in the background isolate
+    await dotenv.load(fileName: ".env");
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
 
     // The interval for updates (10 minutes)
     const updateInterval = Duration(minutes: 10);
 
     Timer.periodic(updateInterval, (timer) async {
       try {
+        final user = FirebaseAuth.instance.currentUser;
+        if (user == null) {
+          debugPrint('Tracking skipped: No user authenticated');
+          return;
+        }
+
         // 1. Get location
         Position position = await Geolocator.getCurrentPosition(
           desiredAccuracy: LocationAccuracy.high,
         );
 
-        // 2. Send to FastAPI
-        // For Web, use localhost. For Android Emulator, use 10.0.2.2.
-        final String baseUrl = const bool.fromEnvironment('dart.library.html')
-            ? 'http://localhost:8000'
-            : 'http://10.0.2.2:8000';
-
+        // 2. Send to Backend from .env
+        final String baseUrl =
+            dotenv.get('BACKEND_URL', fallback: 'http://localhost:8000');
         final url = Uri.parse('$baseUrl/track');
 
         final response = await http.post(
           url,
           headers: {'Content-Type': 'application/json'},
           body: jsonEncode({
-            'user_id': 'user_123', // This should be the real user ID
+            'user_id': user.uid,
             'latitude': position.latitude,
             'longitude': position.longitude,
           }),
         );
 
         if (response.statusCode == 200) {
-          debugPrint('Location updated successfully');
+          debugPrint(
+              'Location updated for ${user.uid}: ${position.latitude}, ${position.longitude}');
         } else {
           debugPrint('Failed to update location: ${response.statusCode}');
         }

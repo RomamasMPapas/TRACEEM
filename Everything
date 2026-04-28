@@ -7,7 +7,7 @@ This document outlines the responsibilities of every file in the project.
 *   **`lib/main.dart`**: The main entry point of the Flutter application. Initializes Firebase, loads environmental variables, configures location services, and starts the background tracking service.
 *   **`lib/injection_container.dart`**: Handles Dependency Injection (using GetIt). Links interfaces (Repositories) and UseCases to their actual implementations (Firebase, etc.).
 *   **`lib/firebase_options.dart`**: Auto-generated configuration that connects the Flutter app to the Firebase project.
-*   **.env**: Stores sensitive configuration like Firebase API Keys and project IDs.
+*   **.env**: Stores sensitive configuration like Firebase API Keys, project IDs, and the **`BACKEND_URL`** for the tracking API.
 *   **pubspec.yaml**: Lists all Flutter dependencies and project assets (images, fonts).
 *   **`lib/core/error/failures.dart`**: App-wide failure and exception classes.
 
@@ -37,7 +37,7 @@ This document outlines the responsibilities of every file in the project.
 *   **`lib/presentation/widgets/common/region_selector.dart`**: A widget for displaying the current detected region and allowing manual region selection via a dialog.
 *   **`lib/core/config/philippine_regions.dart`**: Database of GPS coordinates and boundaries for Philippine regions to center the map automatically.
 *   **`lib/core/services/location_service.dart`**: Requests GPS permissions and performs reverse-geocoding to detect the user's current region using Geolocator.
-*   **`lib/infrastructure/services/tracking_service.dart`**: A background service that ensures location tracking continues even if the app is minimized.
+*   **`lib/infrastructure/services/tracking_service.dart`**: A background service that ensures location tracking continues even if the app is minimized. Dynamically links GPS data to the authenticated **Firebase UID** and periodically sends it to the configured backend server.
 
 ## 📦 Domain & Business Logic (UseCases, BLoC)
 *   **`lib/domain/entities/order_entity.dart`**: Data model representing an order/trace.
@@ -70,7 +70,7 @@ This document outlines the responsibilities of every file in the project.
 *   **`lib/presentation/screens/rating_screen.dart`**: Post-ride feedback screen where users can rate drivers and leave comments.
 
 ## 🐍 Backend API (Python)
-*   **`backend/main.py`**: The **FastAPI** tracking engine. Simulates and serves driver coordinates for the map tracking feature.
+*   **`backend/main.py`**: The **FastAPI** tracking engine. Receives real-time GPS coordinates from logged-in users and serves tracking data for the map interface.
 *   **`backend/requirements.txt`**: Lists Python dependencies for the tracking backend.
 
 

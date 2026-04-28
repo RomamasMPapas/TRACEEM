@@ -11,6 +11,8 @@ import 'complaints_page.dart';
 import 'orders_management_page.dart';
 import 'receipts_page.dart';
 import 'ratings_page.dart';
+import 'drivers_page.dart';
+import 'dashboard_page.dart';
 
 /// The main admin dashboard screen. Hosts Users, Orders, and Complaints tabs.
 /// Adapts to wide screens with a [NavigationRail] and narrow screens with a [BottomNavigationBar].
@@ -110,6 +112,11 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                 ),
                 destinations: const [
                   NavigationRailDestination(
+                    icon: Icon(Icons.dashboard_outlined),
+                    selectedIcon: Icon(Icons.dashboard),
+                    label: Text('Dashboard'),
+                  ),
+                  NavigationRailDestination(
                     icon: Icon(Icons.people_outline),
                     selectedIcon: Icon(Icons.people),
                     label: Text('Users'),
@@ -134,6 +141,11 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                     selectedIcon: Icon(Icons.star),
                     label: Text('Ratings'),
                   ),
+                  NavigationRailDestination(
+                    icon: Icon(Icons.drive_eta_outlined),
+                    selectedIcon: Icon(Icons.drive_eta),
+                    label: Text('Drivers'),
+                  ),
                 ],
               ),
             const VerticalDivider(thickness: 1, width: 1),
@@ -142,11 +154,13 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
               child: IndexedStack(
                 index: _selectedIndex,
                 children: const [
+                  DashboardPage(),
                   UsersPage(),
                   OrdersManagementPage(),
                   ComplaintsPage(),
                   ReceiptsPage(),
                   RatingsPage(),
+                  DriversPage(),
                 ],
               ),
             ),
@@ -158,6 +172,10 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                 onTap: (index) => setState(() => _selectedIndex = index),
                 selectedItemColor: const Color(0xFF4C8CFF),
                 items: const [
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.dashboard),
+                    label: 'Dashboard',
+                  ),
                   BottomNavigationBarItem(
                     icon: Icon(Icons.people),
                     label: 'Users',
@@ -177,6 +195,10 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                   BottomNavigationBarItem(
                     icon: Icon(Icons.star),
                     label: 'Ratings',
+                  ),
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.drive_eta),
+                    label: 'Drivers',
                   ),
                 ],
               )

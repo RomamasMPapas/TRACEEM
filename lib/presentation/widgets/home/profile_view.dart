@@ -6,8 +6,7 @@ import '../../bloc/auth_event.dart';
 import '../../bloc/auth_state.dart';
 import '../../screens/login_screen.dart';
 
-/// The user profile panel shown when the profile avatar is tapped on the Home screen.
-/// Lets the user view and update their name, email, address, phone, and password.
+/// A premium user profile panel for editing details with high-end UI design.
 class ProfileView extends StatefulWidget {
   final UserEntity user;
 
@@ -30,11 +29,8 @@ class _ProfileViewState extends State<ProfileView> {
     _fullNameController = TextEditingController(text: widget.user.username);
     _emailController = TextEditingController(text: widget.user.email);
     _addressController = TextEditingController(text: widget.user.address);
-    _phoneNumberController = TextEditingController(
-      text: widget.user.phoneNumber,
-    );
-    _passwordController =
-        TextEditingController(); // Password is not pre-filled for security
+    _phoneNumberController = TextEditingController(text: widget.user.phoneNumber);
+    _passwordController = TextEditingController();
   }
 
   @override
@@ -47,7 +43,6 @@ class _ProfileViewState extends State<ProfileView> {
     super.dispose();
   }
 
-  /// Dispatches an [UpdateProfileSubmitted] event to [AuthBloc] with the current form field values.
   void _updateProfile() {
     context.read<AuthBloc>().add(
       UpdateProfileSubmitted(
@@ -75,172 +70,198 @@ class _ProfileViewState extends State<ProfileView> {
             const SnackBar(
               content: Text('Profile updated successfully!'),
               backgroundColor: Colors.green,
+              behavior: SnackBarBehavior.floating,
             ),
           );
         } else if (state is AuthError) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(state.message), backgroundColor: Colors.red),
+            SnackBar(
+              content: Text(state.message),
+              backgroundColor: Colors.red,
+              behavior: SnackBarBehavior.floating,
+            ),
           );
         }
       },
       child: Column(
         children: [
-          // Blue Header with Profile Icon
+          // High-end Profile Header
           Container(
             width: double.infinity,
-            height: 180,
-            color: const Color(0xFF4C8CFF),
-            child: Center(
-              child: Stack(
-                alignment: Alignment.bottomRight,
-                children: [
-                  Container(
-                    width: 100,
-                    height: 100,
-                    decoration: const BoxDecoration(
-                      color: Colors.white,
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.person_outline,
-                      size: 70,
-                      color: Colors.black,
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.all(2),
-                    decoration: const BoxDecoration(
-                      color: Colors.white,
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.check_circle,
-                      color: Colors.blue,
-                      size: 20,
-                    ),
-                  ),
-                ],
+            padding: const EdgeInsets.only(top: 60, bottom: 30),
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Color(0xFF1E3A8A), Color(0xFF4C8CFF)],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+              ),
+              borderRadius: BorderRadius.only(
+                bottomLeft: Radius.circular(40),
+                bottomRight: Radius.circular(40),
               ),
             ),
-          ),
-
-          // Settings / Form Area
-          Expanded(
-            child: Container(
-              color: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 20),
-              child: SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+            child: Column(
+              children: [
+                Stack(
+                  alignment: Alignment.bottomRight,
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        TextButton.icon(
-                          onPressed: _updateProfile,
-                          icon: const Icon(
-                            Icons.save,
-                            size: 18,
-                            color: Colors.blue,
+                    Container(
+                      width: 110,
+                      height: 110,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.white,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.2),
+                            blurRadius: 15,
+                            offset: const Offset(0, 5),
                           ),
-                          label: const Text(
-                            "SAVE CHANGES",
-                            style: TextStyle(
-                              color: Colors.blue,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
+                        ],
+                        border: Border.all(color: Colors.white, width: 4),
+                      ),
+                      child: ClipOval(
+                        child: Image.network(
+                          'https://robohash.org/${widget.user.username}?set=set4',
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) =>
+                              const Icon(Icons.person, size: 60, color: Colors.grey),
                         ),
-                        Icon(
-                          Icons.logout,
-                          color: Colors.black.withValues(alpha: 0.7),
-                          size: 20,
-                        ),
-                      ],
+                      ),
                     ),
-                    const SizedBox(height: 10),
-
-                    _buildProfileField(
-                      "Full Name",
-                      "(Can Only Be Change Once)",
-                      controller: _fullNameController,
-                      showEditIcon: true,
-                    ),
-                    const SizedBox(height: 25),
-
-                    _buildProfileField(
-                      "Address",
-                      "Street .................... No./ZIP CODE",
-                      controller: _addressController,
-                      showEditIcon: true,
-                    ),
-                    const SizedBox(height: 25),
-
-                    _buildProfileField(
-                      "Email",
-                      ".................. @gmail ....................",
-                      controller: _emailController,
-                      prefixIcon: Icons.email_outlined,
-                      showEditIcon: true,
-                    ),
-                    const SizedBox(height: 25),
-
-                    _buildProfileField(
-                      "Number",
-                      "(+63) ........................................",
-                      controller: _phoneNumberController,
-                      showEditIcon: true,
-                    ),
-                    const SizedBox(height: 25),
-
-                    _buildProfileField(
-                      "Password",
-                      "(Can Only Be Change Once A Month)",
-                      controller: _passwordController,
-                      isPassword: true,
-                      showEditIcon: true,
+                    Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: const BoxDecoration(
+                        color: Color(0xFF4C8CFF),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.camera_alt,
+                        color: Colors.white,
+                        size: 18,
+                      ),
                     ),
                   ],
                 ),
-              ),
+                const SizedBox(height: 15),
+                Text(
+                  widget.user.username,
+                  style: const TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                    letterSpacing: 1.2,
+                  ),
+                ),
+                Text(
+                  widget.user.email,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.white.withValues(alpha: 0.8),
+                  ),
+                ),
+              ],
             ),
           ),
 
-          // Footer with Log Out
-          Container(
-            width: double.infinity,
-            height: 100,
-            color: const Color(0xFF4C8CFF),
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-            alignment: Alignment.bottomRight,
-            child: GestureDetector(
-              onTap: () {
-                context.read<AuthBloc>().add(LogoutRequested());
-              },
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 8,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.red,
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: const [
-                    BoxShadow(
-                      color: Colors.black26,
-                      blurRadius: 5,
-                      offset: Offset(0, 2),
+          // Scrollable Settings Form
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Personal Information',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w900,
+                      color: Color(0xFF1E3A8A),
                     ),
-                  ],
-                ),
-                child: const Text(
-                  'LOG OUT',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
                   ),
-                ),
+                  const SizedBox(height: 20),
+
+                  _buildPremiumField(
+                    label: "Full Name",
+                    controller: _fullNameController,
+                    icon: Icons.person_outline,
+                    hintText: "Enter your full name",
+                  ),
+                  _buildPremiumField(
+                    label: "Email Address",
+                    controller: _emailController,
+                    icon: Icons.email_outlined,
+                    hintText: "Enter your email",
+                  ),
+                  _buildPremiumField(
+                    label: "Phone Number",
+                    controller: _phoneNumberController,
+                    icon: Icons.phone_outlined,
+                    hintText: "+63 9...",
+                  ),
+                  _buildPremiumField(
+                    label: "Home Address",
+                    controller: _addressController,
+                    icon: Icons.location_on_outlined,
+                    hintText: "Enter your complete address",
+                  ),
+                  _buildPremiumField(
+                    label: "Update Password",
+                    controller: _passwordController,
+                    icon: Icons.lock_outline,
+                    hintText: "Leave blank to keep current password",
+                    isPassword: true,
+                  ),
+                  
+                  const SizedBox(height: 30),
+
+                  // Save Button
+                  SizedBox(
+                    width: double.infinity,
+                    height: 55,
+                    child: ElevatedButton(
+                      onPressed: _updateProfile,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF4C8CFF),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(15),
+                        ),
+                        elevation: 5,
+                        shadowColor: const Color(0xFF4C8CFF).withValues(alpha: 0.5),
+                      ),
+                      child: const Text(
+                        "SAVE CHANGES",
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                          letterSpacing: 1.5,
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // Logout Button
+                  Center(
+                    child: TextButton.icon(
+                      onPressed: () {
+                        context.read<AuthBloc>().add(LogoutRequested());
+                      },
+                      icon: const Icon(Icons.logout, color: Colors.red),
+                      label: const Text(
+                        "Log Out",
+                        style: TextStyle(
+                          color: Colors.red,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 30),
+                ],
               ),
             ),
           ),
@@ -249,64 +270,59 @@ class _ProfileViewState extends State<ProfileView> {
     );
   }
 
-  /// Builds a single labeled form field for profile editing.
-  /// Supports password obscuring, a prefix icon, and an optional edit indicator icon.
-  Widget _buildProfileField(
-    String label,
-    String hint, {
+  Widget _buildPremiumField({
+    required String label,
     required TextEditingController controller,
+    required IconData icon,
+    required String hintText,
     bool isPassword = false,
-    bool showEditIcon = false,
-    IconData? prefixIcon,
   }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 13),
-        ),
-        const SizedBox(height: 8),
-        Container(
-          width: double.infinity,
-          decoration: BoxDecoration(
-            border: Border.all(color: Colors.black12),
-            borderRadius: BorderRadius.circular(4),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: Colors.grey.shade700,
+              letterSpacing: 0.5,
+            ),
           ),
-          child: Row(
-            children: [
-              if (prefixIcon != null) ...[
-                const SizedBox(width: 10),
-                Icon(prefixIcon, size: 16, color: Colors.grey),
+          const SizedBox(height: 8),
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(15),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.grey.shade200,
+                  blurRadius: 10,
+                  offset: const Offset(0, 5),
+                ),
               ],
-              const SizedBox(width: 10),
-              Expanded(
-                child: TextField(
-                  controller: controller,
-                  obscureText: isPassword,
-                  style: const TextStyle(fontSize: 12),
-                  decoration: InputDecoration(
-                    hintText: hint,
-                    hintStyle: TextStyle(
-                      color: Colors.grey.shade400,
-                      fontSize: 11,
-                      fontStyle: FontStyle.italic,
-                    ),
-                    border: InputBorder.none,
-                    isDense: true,
-                    contentPadding: const EdgeInsets.symmetric(vertical: 10),
-                  ),
+            ),
+            child: TextField(
+              controller: controller,
+              obscureText: isPassword,
+              decoration: InputDecoration(
+                hintText: hintText,
+                hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 14),
+                prefixIcon: Icon(icon, color: const Color(0xFF4C8CFF), size: 22),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(15),
+                  borderSide: BorderSide.none,
                 ),
+                filled: true,
+                fillColor: Colors.white,
+                contentPadding: const EdgeInsets.symmetric(vertical: 16),
               ),
-              if (showEditIcon)
-                const Padding(
-                  padding: EdgeInsets.only(right: 10),
-                  child: Icon(Icons.open_in_new, size: 14, color: Colors.grey),
-                ),
-            ],
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

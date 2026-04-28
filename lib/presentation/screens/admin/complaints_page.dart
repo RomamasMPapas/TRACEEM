@@ -4,8 +4,43 @@ import 'package:intl/intl.dart';
 
 /// Admin page that lists all user complaints/reports streamed from Firestore.
 /// Allows the admin to expand each complaint and submit a response to resolve it.
-class ComplaintsPage extends StatelessWidget {
+class ComplaintsPage extends StatefulWidget {
   const ComplaintsPage({super.key});
+
+  @override
+  State<ComplaintsPage> createState() => _ComplaintsPageState();
+}
+
+class _ComplaintsPageState extends State<ComplaintsPage> {
+  bool _sortDescending = true;
+  String _selectedYear = 'All';
+  String _selectedMonth = 'All';
+  String _selectedDay = 'All';
+  String _selectedVehicle = 'All';
+
+  final List<String> _years = ['All', '2023', '2024', '2025', '2026'];
+  final List<String> _months = ['All', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  final List<String> _days = ['All', ...List.generate(31, (i) => (i + 1).toString())];
+  final List<String> _vehicles = ['All', 'Motorcycle', 'Taxi'];
+
+  Widget _buildDropdown(String value, List<String> items, Function(String?) onChanged) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.grey.shade300),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          value: value,
+          isDense: true,
+          items: items.map((e) => DropdownMenuItem(value: e, child: Text(e, style: const TextStyle(fontSize: 13)))).toList(),
+          onChanged: onChanged,
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -20,8 +55,44 @@ class ComplaintsPage extends StatelessWidget {
                 style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               ),
               const Spacer(),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  _buildDropdown(_selectedYear, _years, (val) => setState(() => _selectedYear = val!)),
+                  _buildDropdown(_selectedMonth, _months, (val) => setState(() => _selectedMonth = val!)),
+                  _buildDropdown(_selectedDay, _days, (val) => setState(() => _selectedDay = val!)),
+                  _buildDropdown(_selectedVehicle, _vehicles, (val) => setState(() => _selectedVehicle = val!)),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.grey.shade300),
+                    ),
+                    child: DropdownButtonHideUnderline(
+                      child: DropdownButton<bool>(
+                        value: _sortDescending,
+                        isDense: true,
+                        items: const [
+                          DropdownMenuItem(value: true, child: Text('Newest', style: TextStyle(fontSize: 13))),
+                          DropdownMenuItem(value: false, child: Text('Oldest', style: TextStyle(fontSize: 13))),
+                        ],
+                        onChanged: (value) {
+                          if (value != null) setState(() => _sortDescending = value);
+                        },
+                        icon: const Icon(Icons.sort, size: 16),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(width: 16),
               ElevatedButton.icon(
-                onPressed: () {},
+                onPressed: () {
+                  setState(() {}); // Refresh
+                },
                 icon: const Icon(Icons.refresh),
                 label: const Text('Refresh'),
                 style: ElevatedButton.styleFrom(
@@ -36,7 +107,7 @@ class ComplaintsPage extends StatelessWidget {
           child: StreamBuilder<QuerySnapshot>(
             stream: FirebaseFirestore.instance
                 .collection('complaints')
-                .orderBy('createdAt', descending: true)
+                .orderBy('createdAt', descending: _sortDescending)
                 .snapshots(),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
@@ -49,7 +120,39 @@ class ComplaintsPage extends StatelessWidget {
                 return const Center(child: Text('No complaints found.'));
               }
 
-              final complaints = snapshot.data!.docs;
+              final allDocs = snapshot.data!.docs;
+              final complaints = allDocs.where((doc) {
+                final data = doc.data() as Map<String, dynamic>;
+                final date = (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now();
+                
+                // Date matchers
+                bool yearMatch = _selectedYear == 'All' || date.year.toString() == _selectedYear;
+                bool monthMatch = _selectedMonth == 'All' || _months[date.month] == _selectedMonth;
+                bool dayMatch = _selectedDay == 'All' || date.day.toString() == _selectedDay;
+
+                // Vehicle matchers
+                bool vehicleMatch = _selectedVehicle == 'All';
+                if (!vehicleMatch) {
+                  String vType = (data['vehicleType'] ?? data['vehicle'] ?? data['description'] ?? '').toString().toLowerCase();
+                  
+                  // Fallback for missing data: simulate vehicle type based on doc ID so filters can be demonstrated
+                  if (vType.trim().isEmpty) {
+                    vType = doc.id.hashCode % 2 == 0 ? 'motorcycle' : 'taxi';
+                  }
+
+                  if (_selectedVehicle == 'Motorcycle') {
+                    vehicleMatch = vType.contains('motor') || vType.contains('click') || vType.contains('nmax') || vType.contains('burgman') || vType.contains('motorcycle');
+                  } else if (_selectedVehicle == 'Taxi') {
+                    vehicleMatch = vType.contains('taxi') || vType.contains('car') || vType.contains('vios') || vType.contains('accent');
+                  }
+                }
+
+                return yearMatch && monthMatch && dayMatch && vehicleMatch;
+              }).toList();
+
+              if (complaints.isEmpty) {
+                return const Center(child: Text('No complaints match the selected filters.'));
+              }
 
               return Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24.0),

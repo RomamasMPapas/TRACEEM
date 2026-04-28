@@ -20,6 +20,7 @@ class RatingDialog extends StatefulWidget {
 
 class _RatingDialogState extends State<RatingDialog> {
   int _rating = 0;
+  bool _blockDriver = false;
   final TextEditingController _commentController = TextEditingController();
 
   @override
@@ -168,7 +169,35 @@ class _RatingDialogState extends State<RatingDialog> {
                   ),
                 ),
               ),
-              const SizedBox(height: 30),
+              const SizedBox(height: 20),
+              // Block Driver Option
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 30),
+                child: Row(
+                  children: [
+                    Icon(Icons.block, color: Colors.red.shade400, size: 20),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        "Block this driver from future rides",
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Colors.grey.shade700,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    Switch(
+                      value: _blockDriver,
+                      activeColor: Colors.red,
+                      onChanged: (val) {
+                        setState(() => _blockDriver = val);
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
               // Submit Button
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 25),

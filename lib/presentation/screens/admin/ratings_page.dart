@@ -12,41 +12,19 @@ class RatingsPage extends StatefulWidget {
 class _RatingsPageState extends State<RatingsPage> {
   final TextEditingController _searchController = TextEditingController();
   final List<Map<String, dynamic>> _allRatings = [
-    {
-      'driver': 'Lito Fast',
-      'user': 'Rob Martin',
-      'rating': 5,
-      'comment': 'Awesome ride! Very fast and safe.',
-      'vehicle': 'Honda Click',
-    },
-    {
-      'driver': 'Robert Driver',
-      'user': 'Jane Doe',
-      'rating': 4,
-      'comment': 'Comfortable car and clean interior.',
-      'vehicle': 'Toyota Vios',
-    },
-    {
-      'driver': 'Maria Rider',
-      'user': 'Alice Smith',
-      'rating': 5,
-      'comment': 'Very professional and safe driving.',
-      'vehicle': 'Yamaha NMAX',
-    },
-    {
-      'driver': 'Sally Cab',
-      'user': 'Bob Johnson',
-      'rating': 3,
-      'comment': 'A bit slow, but arrival was on time.',
-      'vehicle': 'Hyundai Accent',
-    },
-    {
-      'driver': 'Jun Moto',
-      'user': 'Charlie Brown',
-      'rating': 5,
-      'comment': 'Great conversation and very polite.',
-      'vehicle': 'Suzuki Burgman',
-    },
+    // Motorcycles (5)
+    {'driver': 'Lito Fast', 'user': 'Rob Martin', 'rating': 5, 'comment': 'Awesome ride! Very fast and safe.', 'vehicle': 'Honda Click', 'type': 'Motorcycle'},
+    {'driver': 'Maria Rider', 'user': 'Alice Smith', 'rating': 5, 'comment': 'Very professional and safe driving.', 'vehicle': 'Yamaha NMAX', 'type': 'Motorcycle'},
+    {'driver': 'Jun Moto', 'user': 'Charlie Brown', 'rating': 2, 'comment': 'Rude and drove recklessly.', 'vehicle': 'Suzuki Burgman', 'type': 'Motorcycle'},
+    {'driver': 'Kiko Wheels', 'user': 'David Lee', 'rating': 4, 'comment': 'Good driver, knows the shortcuts.', 'vehicle': 'Kawasaki Rouser', 'type': 'Motorcycle'},
+    {'driver': 'Benji Zoom', 'user': 'Eva Green', 'rating': 4, 'comment': 'Smooth ride, nice motorcycle.', 'vehicle': 'Vespa Primavera', 'type': 'Motorcycle'},
+    
+    // Taxis (5)
+    {'driver': 'Robert Driver', 'user': 'Jane Doe', 'rating': 3, 'comment': 'Comfortable car but took the long route.', 'vehicle': 'Toyota Vios', 'type': 'Taxi'},
+    {'driver': 'Sally Cab', 'user': 'Bob Johnson', 'rating': 3, 'comment': 'A bit slow, but arrival was on time.', 'vehicle': 'Hyundai Accent', 'type': 'Taxi'},
+    {'driver': 'Carlo Sedan', 'user': 'Fiona Gallagher', 'rating': 5, 'comment': 'Very clean car and polite driver.', 'vehicle': 'Nissan Almera', 'type': 'Taxi'},
+    {'driver': 'Dina Drive', 'user': 'George Costanza', 'rating': 2, 'comment': 'Car smelled a bit weird.', 'vehicle': 'Mitsubishi Mirage', 'type': 'Taxi'},
+    {'driver': 'Tony Wheels', 'user': 'Hannah Abbott', 'rating': 4, 'comment': 'Great trip, relaxing music.', 'vehicle': 'Kia Soluto', 'type': 'Taxi'},
   ];
 
   List<Map<String, dynamic>> _filteredRatings = [];
@@ -57,18 +35,21 @@ class _RatingsPageState extends State<RatingsPage> {
     _filteredRatings = _allRatings;
   }
 
-  /// Filters the ratings list based on the user's search query.
-  /// Matches the query against the driver name, user name, and vehicle type.
-  void _filterRatings(String query) {
+  String _selectedType = 'All';
+
+  /// Filters the ratings list based on the user's search query and selected vehicle type.
+  void _filterRatings([String? query]) {
+    final searchQuery = query ?? _searchController.text;
     setState(() {
-      _filteredRatings = _allRatings
-          .where(
-            (r) =>
-                r['driver'].toLowerCase().contains(query.toLowerCase()) ||
-                r['user'].toLowerCase().contains(query.toLowerCase()) ||
-                r['vehicle'].toLowerCase().contains(query.toLowerCase()),
-          )
-          .toList();
+      _filteredRatings = _allRatings.where((r) {
+        final matchesSearch = r['driver'].toLowerCase().contains(searchQuery.toLowerCase()) ||
+            r['user'].toLowerCase().contains(searchQuery.toLowerCase()) ||
+            r['vehicle'].toLowerCase().contains(searchQuery.toLowerCase());
+        
+        final matchesType = _selectedType == 'All' || r['type'] == _selectedType;
+        
+        return matchesSearch && matchesType;
+      }).toList();
     });
   }
 
@@ -76,6 +57,55 @@ class _RatingsPageState extends State<RatingsPage> {
   Widget build(BuildContext context) {
     return Column(
       children: [
+        // "Folder" Tabs for vehicle types
+        Container(
+          margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+          decoration: BoxDecoration(
+            color: Colors.grey.shade200,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Row(
+            children: ['All', 'Motorcycle', 'Taxi'].map((type) {
+              final isSelected = _selectedType == type;
+              return Expanded(
+                child: GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      _selectedType = type;
+                      _filterRatings();
+                    });
+                  },
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    decoration: BoxDecoration(
+                      color: isSelected ? const Color(0xFF4C8CFF) : Colors.transparent,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: isSelected
+                          ? [
+                              BoxShadow(
+                                color: Colors.blue.withValues(alpha: 0.3),
+                                blurRadius: 8,
+                                offset: const Offset(0, 4),
+                              )
+                            ]
+                          : [],
+                    ),
+                    child: Center(
+                      child: Text(
+                        type,
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: isSelected ? Colors.white : Colors.grey.shade700,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ),
         Padding(
           padding: const EdgeInsets.all(16.0),
           child: TextField(

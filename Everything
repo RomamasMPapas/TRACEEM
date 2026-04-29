@@ -3944,6 +3944,10 @@ class _ComplaintsPageState extends State<ComplaintsPage> {
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 
+/// The [DashboardPage] provides the administrator with a high-level overview
+/// of system metrics and analytics. It includes interactive charts such as
+/// a Bar Chart showing individual driver ratings and a Pie Chart summarizing
+/// overall ride satisfaction levels (Satisfied, Neutral, Dissatisfied).
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
 
@@ -3971,12 +3975,10 @@ class _DashboardPageState extends State<DashboardPage> {
 
   @override
   Widget build(BuildContext context) {
-    // Calculate satisfied vs dissatisfied
-    // Let's say satisfied is >= 4, neutral is 3-3.9, dissatisfied < 3
-    // For simplicity, we just use 3 categories or 2 categories.
-    // The prompt: "satisfied rides over dissatisfied rides"
-    // Let's just create a Pie chart with 3 sections: Satisfied (4-5), Neutral (3), Dissatisfied (1-2)
-    // Or just Satisfied vs Dissatisfied. Let's do: Satisfied (>=4) 65%, Neutral (3) 20%, Dissatisfied (<3) 15%.
+    // Calculate satisfied vs dissatisfied based on driver ratings.
+    // Satisfied: Rating >= 4
+    // Neutral: Rating between 3 and 3.9
+    // Dissatisfied: Rating < 3
     final int satisfiedCount = _driverRatings.where((d) => d['rating'] >= 4).length;
     final int neutralCount = _driverRatings.where((d) => d['rating'] >= 3 && d['rating'] < 4).length;
     final int dissatisfiedCount = _driverRatings.where((d) => d['rating'] < 3).length;
@@ -3994,7 +3996,7 @@ class _DashboardPageState extends State<DashboardPage> {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Bar Chart - Overall Ratings of Drivers
+              // Bar Chart Section - Displays Overall Ratings of Drivers
               Expanded(
                 flex: 2,
                 child: Card(
@@ -4118,7 +4120,7 @@ class _DashboardPageState extends State<DashboardPage> {
                 ),
               ),
               const SizedBox(width: 24),
-              // Pie Chart - Satisfied vs Dissatisfied
+              // Pie Chart Section - Displays Ride Satisfaction Categories
               Expanded(
                 flex: 1,
                 child: Card(
@@ -4180,7 +4182,7 @@ class _DashboardPageState extends State<DashboardPage> {
                           ),
                         ),
                         const SizedBox(height: 24),
-                        // Legend
+                        // Legend for the Pie Chart
                         Row(
                           children: [
                             Container(width: 12, height: 12, color: Colors.green),

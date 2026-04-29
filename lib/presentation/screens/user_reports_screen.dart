@@ -5,6 +5,7 @@ import '../../domain/entities/user_entity.dart';
 
 /// Shows the current user's complaint/report history fetched from Firestore.
 /// Displays the status of each report and any admin response received.
+/// The [UserReportsScreen] class is responsible for managing its respective UI components and state.
 class UserReportsScreen extends StatelessWidget {
   final UserEntity user;
 

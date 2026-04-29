@@ -9,6 +9,7 @@ class RatingsPage extends StatefulWidget {
   State<RatingsPage> createState() => _RatingsPageState();
 }
 
+/// The [_RatingsPageState] class is responsible for managing its respective UI components and state.
 class _RatingsPageState extends State<RatingsPage> {
   final TextEditingController _searchController = TextEditingController();
   final List<Map<String, dynamic>> _allRatings = [
@@ -29,6 +30,7 @@ class _RatingsPageState extends State<RatingsPage> {
 
   List<Map<String, dynamic>> _filteredRatings = [];
 
+  /// Initializes the state of the widget before it is built.
   @override
   void initState() {
     super.initState();
@@ -53,6 +55,7 @@ class _RatingsPageState extends State<RatingsPage> {
     });
   }
 
+  /// Builds the visual structure of this widget, returning the widget tree.
   @override
   Widget build(BuildContext context) {
     return Column(

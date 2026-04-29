@@ -10,6 +10,7 @@ class ReceiptsPage extends StatefulWidget {
   State<ReceiptsPage> createState() => _ReceiptsPageState();
 }
 
+/// The [_ReceiptsPageState] class is responsible for managing its respective UI components and state.
 class _ReceiptsPageState extends State<ReceiptsPage> {
   final TextEditingController _searchController = TextEditingController();
   final List<Map<String, dynamic>> _allReceipts = [
@@ -49,6 +50,7 @@ class _ReceiptsPageState extends State<ReceiptsPage> {
 
   List<Map<String, dynamic>> _filteredReceipts = [];
 
+  /// Initializes the state of the widget before it is built.
   @override
   void initState() {
     super.initState();
@@ -68,6 +70,7 @@ class _ReceiptsPageState extends State<ReceiptsPage> {
     });
   }
 
+  /// Builds the visual structure of this widget, returning the widget tree.
   @override
   Widget build(BuildContext context) {
     return Column(

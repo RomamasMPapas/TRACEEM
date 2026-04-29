@@ -11,6 +11,7 @@ import 'admin/admin_home_screen.dart';
 
 /// The initial loading screen shown when the app launches.
 /// Plays a progress bar animation, fires an auth check, and routes to the correct screen.
+/// The [SplashScreen] class is responsible for managing its respective UI components and state.
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
@@ -64,6 +65,7 @@ class _SplashScreenState extends State<SplashScreen>
 
   /// Navigates to the correct next screen based on the current [AuthState].
   /// Admins go to [AdminHomeScreen], regular users go to [HomeScreen], others to [LoginScreen].
+  /// Executes the logic for _navigateToNext.
   void _navigateToNext(AuthState state) {
     if (!mounted) return;
 

@@ -9,6 +9,7 @@ class DriversPage extends StatefulWidget {
   State<DriversPage> createState() => _DriversPageState();
 }
 
+/// The [_DriversPageState] class is responsible for managing its respective UI components and state.
 class _DriversPageState extends State<DriversPage> {
   final TextEditingController _searchController = TextEditingController();
 
@@ -60,6 +61,7 @@ class _DriversPageState extends State<DriversPage> {
 
   List<Map<String, dynamic>> _filteredDrivers = [];
 
+  /// Initializes the state of the widget before it is built.
   @override
   void initState() {
     super.initState();
@@ -127,6 +129,7 @@ class _DriversPageState extends State<DriversPage> {
     );
   }
 
+  /// Executes the logic for _showDriverDetails.
   void _showDriverDetails(Map<String, dynamic> driver) {
     showModalBottomSheet(
       context: context,
@@ -370,6 +373,7 @@ class _DriversPageState extends State<DriversPage> {
     );
   }
 
+  /// Builds and returns the _buildStatItem custom widget component.
   Widget _buildStatItem(IconData icon, Color Color, String label, String value) {
     return Row(
       children: [
@@ -386,6 +390,7 @@ class _DriversPageState extends State<DriversPage> {
     );
   }
 
+  /// Builds the visual structure of this widget, returning the widget tree.
   @override
   Widget build(BuildContext context) {
     return Column(

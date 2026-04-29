@@ -18,11 +18,13 @@ class RatingDialog extends StatefulWidget {
   State<RatingDialog> createState() => _RatingDialogState();
 }
 
+/// The [_RatingDialogState] class is responsible for managing its respective UI components and state.
 class _RatingDialogState extends State<RatingDialog> {
   int _rating = 0;
   bool _blockDriver = false;
   final TextEditingController _commentController = TextEditingController();
 
+  /// Builds the visual structure of this widget, returning the widget tree.
   @override
   Widget build(BuildContext context) {
     return Dialog(
@@ -254,6 +256,7 @@ class _RatingDialogState extends State<RatingDialog> {
     );
   }
 
+  /// Cleans up resources when the widget is permanently removed from the tree.
   @override
   void dispose() {
     _commentController.dispose();

@@ -5,6 +5,7 @@ import 'dart:math';
 
 /// Admin page that displays all orders in a data table streamed from Firestore.
 /// Allows the admin to update order status/progress or delete orders.
+/// The [OrdersManagementPage] class is responsible for managing its respective UI components and state.
 class OrdersManagementPage extends StatelessWidget {
   const OrdersManagementPage({super.key});
 
@@ -266,6 +267,7 @@ class OrdersManagementPage extends StatelessWidget {
 
   // ... (Original _showCreateOrderDialog and _createOrder logic remains same as requested)
   /// Shows a dialog for the admin to create a new test order assigned to a specific user ID.
+  /// Executes the logic for _showCreateOrderDialog.
   void _showCreateOrderDialog(BuildContext context) {
     final userIdController = TextEditingController();
     final statusList = ['On the way', 'Preparing', 'Picked up', 'Delivered'];
@@ -333,6 +335,7 @@ class OrdersManagementPage extends StatelessWidget {
   }
 
   /// Creates a new order in Firestore for the given [userId] with a random order number.
+  /// Asynchronously executes the logic for _createOrder.
   Future<void> _createOrder(String userId, String status) async {
     final random = Random();
     final orderNum =

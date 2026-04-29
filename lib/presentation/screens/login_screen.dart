@@ -10,6 +10,7 @@ import '../widgets/auth/auth_widgets.dart';
 
 /// The entry screen for unauthenticated users.
 /// Handles the landing page, login form, and registration form with animated mode switching.
+/// The [LoginScreen] class is responsible for managing its respective UI components and state.
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -34,6 +35,7 @@ class _LoginScreenState extends State<LoginScreen>
   AuthMode _authMode = AuthMode.landing;
 
   /// Dispatches a [LoginSubmitted] event to [AuthBloc] with the current username and password input.
+  /// Executes the logic for _handleLogin.
   void _handleLogin() {
     context.read<AuthBloc>().add(
       LoginSubmitted(_usernameController.text, _passwordController.text),
@@ -41,6 +43,7 @@ class _LoginScreenState extends State<LoginScreen>
   }
 
   /// Dispatches a [SignUpSubmitted] event to [AuthBloc] with the registration form fields.
+  /// Executes the logic for _handleRegister.
   void _handleRegister() {
     context.read<AuthBloc>().add(
       SignUpSubmitted(
@@ -110,6 +113,7 @@ class _LoginScreenState extends State<LoginScreen>
   }
 
   /// Builds the initial landing view with the TRACE EM logo and Log In / Sign Up buttons.
+  /// Builds and returns the _buildLandingView custom widget component.
   Widget _buildLandingView() {
     return Center(
       child: Column(
@@ -161,6 +165,7 @@ class _LoginScreenState extends State<LoginScreen>
   }
 
   /// Builds the modal login card with username, password fields and social login icons.
+  /// Builds and returns the _buildLoginCard custom widget component.
   Widget _buildLoginCard() {
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 30),
@@ -258,6 +263,7 @@ class _LoginScreenState extends State<LoginScreen>
   }
 
   /// Builds the modal registration card with full name, email, phone, password and address fields.
+  /// Builds and returns the _buildRegisterCard custom widget component.
   Widget _buildRegisterCard() {
     return SingleChildScrollView(
       child: Card(
@@ -312,6 +318,7 @@ class _LoginScreenState extends State<LoginScreen>
 
   /// Builds a styled action button (e.g. LOG IN or REGISTER) that shows a loading spinner
   /// when the [AuthBloc] is in the loading state.
+  /// Builds and returns the _buildActionButton custom widget component.
   Widget _buildActionButton(String text, VoidCallback onTap) {
     return SizedBox(
       width: 150,

@@ -16,6 +16,7 @@ import 'dashboard_page.dart';
 
 /// The main admin dashboard screen. Hosts Users, Orders, and Complaints tabs.
 /// Adapts to wide screens with a [NavigationRail] and narrow screens with a [BottomNavigationBar].
+/// The [AdminHomeScreen] class is responsible for managing its respective UI components and state.
 class AdminHomeScreen extends StatefulWidget {
   final UserEntity admin;
 
@@ -25,6 +26,7 @@ class AdminHomeScreen extends StatefulWidget {
   State<AdminHomeScreen> createState() => _AdminHomeScreenState();
 }
 
+/// The [_AdminHomeScreenState] class is responsible for managing its respective UI components and state.
 class _AdminHomeScreenState extends State<AdminHomeScreen> {
   int _selectedIndex = 0;
 
@@ -41,6 +43,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
   }
 
   /// Updates the admin's `isOnline` field in Firestore to track their real-time online presence.
+  /// Asynchronously executes the logic for _setUserOnlineStatus.
   Future<void> _setUserOnlineStatus(bool isOnline) async {
     try {
       await FirebaseFirestore.instance

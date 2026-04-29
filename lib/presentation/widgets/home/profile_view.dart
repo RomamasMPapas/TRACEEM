@@ -16,6 +16,7 @@ class ProfileView extends StatefulWidget {
   State<ProfileView> createState() => _ProfileViewState();
 }
 
+/// The [_ProfileViewState] class is responsible for managing its respective UI components and state.
 class _ProfileViewState extends State<ProfileView> {
   late TextEditingController _fullNameController;
   late TextEditingController _emailController;
@@ -23,6 +24,7 @@ class _ProfileViewState extends State<ProfileView> {
   late TextEditingController _phoneNumberController;
   late TextEditingController _passwordController;
 
+  /// Initializes the state of the widget before it is built.
   @override
   void initState() {
     super.initState();
@@ -33,6 +35,7 @@ class _ProfileViewState extends State<ProfileView> {
     _passwordController = TextEditingController();
   }
 
+  /// Cleans up resources when the widget is permanently removed from the tree.
   @override
   void dispose() {
     _fullNameController.dispose();
@@ -43,6 +46,7 @@ class _ProfileViewState extends State<ProfileView> {
     super.dispose();
   }
 
+  /// Executes the logic for _updateProfile.
   void _updateProfile() {
     context.read<AuthBloc>().add(
       UpdateProfileSubmitted(
@@ -56,6 +60,7 @@ class _ProfileViewState extends State<ProfileView> {
     );
   }
 
+  /// Builds the visual structure of this widget, returning the widget tree.
   @override
   Widget build(BuildContext context) {
     return BlocListener<AuthBloc, AuthState>(

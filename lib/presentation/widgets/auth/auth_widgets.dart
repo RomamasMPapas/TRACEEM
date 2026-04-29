@@ -18,6 +18,7 @@ Widget buildCustomTextField(
   );
 }
 
+/// The [_CustomTextField] class is responsible for managing its respective UI components and state.
 class _CustomTextField extends StatefulWidget {
   final String label;
   final TextEditingController controller;
@@ -37,6 +38,7 @@ class _CustomTextField extends StatefulWidget {
   State<_CustomTextField> createState() => _CustomTextFieldState();
 }
 
+/// The [_CustomTextFieldState] class is responsible for managing its respective UI components and state.
 class _CustomTextFieldState extends State<_CustomTextField> {
   late bool _obscureText;
 

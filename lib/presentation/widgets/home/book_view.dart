@@ -10,6 +10,7 @@ import '../../screens/rating_screen.dart';
 
 /// The booking tab widget on the Home screen.
 /// Shows an OpenStreetMap with FROM/TO address search, route drawing, and vehicle selection.
+/// The [BookView] class is responsible for managing its respective UI components and state.
 class BookView extends StatefulWidget {
   final String? detectedRegion;
 
@@ -19,6 +20,7 @@ class BookView extends StatefulWidget {
   State<BookView> createState() => BookViewState();
 }
 
+/// The [BookViewState] class is responsible for managing its respective UI components and state.
 class BookViewState extends State<BookView> {
   // === MAP & ROUTING STATE ===
   /// The default map center, initialized based on the user's detected region.
@@ -104,6 +106,7 @@ class BookViewState extends State<BookView> {
   }
 
   /// Sets the map's initial center to the center of the user's detected region.
+  /// Executes the logic for _setInitialPosition.
   void _setInitialPosition() {
     final region =
         PhilippineRegions.getRegionByCode(
@@ -344,6 +347,7 @@ class BookViewState extends State<BookView> {
   final TextEditingController _toController = TextEditingController();
 
   /// Swaps the FROM and TO locations, updating text controllers, coordinates, and route.
+  /// Executes the logic for _swapAddresses.
   void _swapAddresses() {
     if (_fromController.text.isEmpty && _toController.text.isEmpty) return;
     setState(() {
@@ -376,6 +380,7 @@ class BookViewState extends State<BookView> {
 
   /// Opens the address search bottom sheet for either the FROM or TO field.
   /// On selection, updates the pin on the map and triggers route fetching if both points are set.
+  /// Executes the logic for _showAddressBottomSheet.
   void _showAddressBottomSheet(String label, TextEditingController controller) {
     final currentRegion =
         PhilippineRegions.getRegionByCode(
@@ -418,6 +423,7 @@ class BookViewState extends State<BookView> {
 
   /// Fetches the driving route between the FROM and TO coordinates using OSRM.
   /// Falls back to OpenStreetMap routing server on failure.
+  /// Asynchronously executes the logic for _fetchRoute.
   Future<void> _fetchRoute() async {
     if (_fromLatLng == null || _toLatLng == null) return;
     setState(() => _isFetchingRoute = true);
@@ -498,6 +504,7 @@ class BookViewState extends State<BookView> {
   }
 
   /// Builds a tappable search input bar that opens the address bottom sheet on tap.
+  /// Builds and returns the _buildSearchInput custom widget component.
   Widget _buildSearchInput(String label, TextEditingController controller) {
     return GestureDetector(
       onTap: () => _showAddressBottomSheet(label, controller),
@@ -553,6 +560,7 @@ class BookViewState extends State<BookView> {
   }
 
   /// Builds the "Recent Rides" section as a compact, integrated list.
+  /// Builds and returns the _buildHistorySection custom widget component.
   Widget _buildHistorySection() {
     return Column(
       children: [
@@ -563,6 +571,7 @@ class BookViewState extends State<BookView> {
   }
 
   /// Builds a single history item row.
+  /// Builds and returns the _buildHistoryItem custom widget component.
   Widget _buildHistoryItem(Map<String, dynamic> ride) {
     return Container(
       margin: const EdgeInsets.only(bottom: 6),
@@ -608,6 +617,7 @@ class BookViewState extends State<BookView> {
   }
 
   /// Builds the circular van/truck button that triggers booking mode when tapped.
+  /// Builds and returns the _buildVanButton custom widget component.
   Widget _buildVanButton() {
     IconData displayIcon;
     if (!_isBookingMode || !_hasSelectedVehicle) {
@@ -650,6 +660,7 @@ class BookViewState extends State<BookView> {
 
   /// Shows a bottom sheet for the user to select a vehicle type (Motorcycle or Taxi).
   /// Calculates and displays the trip price based on route distance.
+  /// Executes the logic for _showVehicleSelectionDialog.
   void _showVehicleSelectionDialog() {
     showModalBottomSheet(
       context: context,
@@ -827,6 +838,7 @@ class BookViewState extends State<BookView> {
 
   /// Builds the bottom booking panel with the selected vehicle info, distance, price,
   /// vehicle switcher button, and the final 'Book Now' confirm button.
+  /// Builds and returns the _buildVehicleButton custom widget component.
   Widget _buildVehicleButton() {
     double distanceKm = (_routeDistanceMeters ?? 0) / 1000;
     double price = 0.0;
@@ -1034,6 +1046,7 @@ class BookViewState extends State<BookView> {
 
   /// Initiates the booking process by showing a waiting dialog.
   /// Once the 10-second timer completes, it triggers the driver assignment.
+  /// Executes the logic for _handleBookNow.
   void _handleBookNow() {
     showDialog(
       context: context,
@@ -1051,6 +1064,7 @@ class BookViewState extends State<BookView> {
 
   /// Randomly selects a driver from the appropriate vehicle pool and shows an acceptance dialog.
   /// The dialog displays driver details, vehicle info, and a "Proceed" button for the receipt.
+  /// Executes the logic for _showDriverAcceptedDialog.
   void _showDriverAcceptedDialog() {
     final random = Random();
     final driverList = _selectedVehicle == 'Motorcycle'
@@ -1141,6 +1155,7 @@ class BookViewState extends State<BookView> {
 
   /// Displays a detailed virtual receipt showing the driver info and route map.
   /// Allows the user to initiate the drive simulation.
+  /// Executes the logic for _showVirtualReceipt.
   void _showVirtualReceipt(Map<String, dynamic> driver) {
     showDialog(
       context: context,
@@ -1460,6 +1475,7 @@ class BookViewState extends State<BookView> {
   /// Starts the animated drive simulation.
   /// Moves the vehicle icon point-by-point along the fetched route and centers the map on it.
   /// Navigates to the rating page upon arrival at the destination.
+  /// Executes the logic for _startDriveSimulation.
   void _startDriveSimulation() {
     if (_routePoints.isEmpty) {
       _navigateToRating(_currentDriver!);
@@ -1496,6 +1512,7 @@ class BookViewState extends State<BookView> {
 
   /// Displays the RatingDialog for the user to provide feedback for the driver.
   /// Resets the booking UI states after the dialog is shown.
+  /// Executes the logic for _navigateToRating.
   void _navigateToRating(Map<String, dynamic> driver) {
     showDialog(
       context: context,
@@ -1511,6 +1528,7 @@ class BookViewState extends State<BookView> {
   }
 
   /// Builds the OpenStreetMap widget with route polyline and location markers.
+  /// Builds and returns the _buildOSMMap custom widget component.
   Widget _buildOSMMap() {
     // Build marker list: FROM pin (green) + TO pin (red)
     final markers = <Marker>[
@@ -1614,6 +1632,7 @@ class BookViewState extends State<BookView> {
   }
 }
 
+/// The [_AddressSearchBottomSheet] class is responsible for managing its respective UI components and state.
 class _AddressSearchBottomSheet extends StatefulWidget {
   final String label;
   final String initialText;
@@ -1634,6 +1653,7 @@ class _AddressSearchBottomSheet extends StatefulWidget {
       _AddressSearchBottomSheetState();
 }
 
+/// The [_AddressSearchBottomSheetState] class is responsible for managing its respective UI components and state.
 class _AddressSearchBottomSheetState extends State<_AddressSearchBottomSheet> {
   late TextEditingController _controller;
   Timer? _debounce;
@@ -1653,6 +1673,7 @@ class _AddressSearchBottomSheetState extends State<_AddressSearchBottomSheet> {
     super.dispose();
   }
 
+  /// Executes the logic for _onSearchChanged.
   void _onSearchChanged(String query) {
     if (_debounce?.isActive ?? false) _debounce!.cancel();
     if (query.trim().isEmpty) {
@@ -1668,6 +1689,7 @@ class _AddressSearchBottomSheetState extends State<_AddressSearchBottomSheet> {
     });
   }
 
+  /// Asynchronously executes the logic for _fetchSuggestions.
   Future<void> _fetchSuggestions(String query) async {
     if (!mounted) return;
     setState(() => _isLoading = true);
@@ -1905,6 +1927,7 @@ class _AddressSearchBottomSheetState extends State<_AddressSearchBottomSheet> {
   }
 }
 
+/// The [_WaitingDialog] class is responsible for managing its respective UI components and state.
 class _WaitingDialog extends StatefulWidget {
   final VoidCallback onComplete;
   const _WaitingDialog({required this.onComplete});
@@ -1913,6 +1936,7 @@ class _WaitingDialog extends StatefulWidget {
   State<_WaitingDialog> createState() => _WaitingDialogState();
 }
 
+/// The [_WaitingDialogState] class is responsible for managing its respective UI components and state.
 class _WaitingDialogState extends State<_WaitingDialog> {
   late int _secondsRemaining;
   Timer? _timer;
@@ -1924,6 +1948,7 @@ class _WaitingDialogState extends State<_WaitingDialog> {
     _startTimer();
   }
 
+  /// Executes the logic for _startTimer.
   void _startTimer() {
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (_secondsRemaining > 0) {

@@ -12,6 +12,7 @@ class DashboardPage extends StatefulWidget {
   State<DashboardPage> createState() => _DashboardPageState();
 }
 
+/// The [_DashboardPageState] class is responsible for managing its respective UI components and state.
 class _DashboardPageState extends State<DashboardPage> {
   // Mock data matching the app's standard data
   final List<Map<String, dynamic>> _driverRatings = [
@@ -30,6 +31,7 @@ class _DashboardPageState extends State<DashboardPage> {
   int _touchedBarIndex = -1;
   int _touchedPieIndex = -1;
 
+  /// Builds the visual structure of this widget, returning the widget tree.
   @override
   Widget build(BuildContext context) {
     // Calculate satisfied vs dissatisfied based on driver ratings.

@@ -11,6 +11,7 @@ import '../../core/config/philippine_regions.dart';
 
 /// Live tracking screen that displays a map with the driver's moving position.
 /// Shows a route polyline, pickup/dropoff markers, and a delivery progress card.
+/// The [OrderTrackingScreen] class is responsible for managing its respective UI components and state.
 class OrderTrackingScreen extends StatefulWidget {
   final String? region;
   final int orderIndex;
@@ -21,6 +22,7 @@ class OrderTrackingScreen extends StatefulWidget {
   State<OrderTrackingScreen> createState() => _OrderTrackingScreenState();
 }
 
+/// The [_OrderTrackingScreenState] class is responsible for managing its respective UI components and state.
 class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
   final MapController _mapController = MapController();
   Timer? _movementTimer;
@@ -76,6 +78,7 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
 
   /// Fetches the current user's saved address from Firestore to use as the dropoff label.
   /// Only used for dynamically-created admin test orders (orderIndex >= 3).
+  /// Asynchronously executes the logic for _fetchUserAddress.
   Future<void> _fetchUserAddress() async {
     try {
       final user = FirebaseAuth.instance.currentUser;
@@ -99,6 +102,7 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
 
   /// Fetches the driving route between pickup and dropoff using the OSRM routing API.
   /// Falls back to a secondary OSRM server if the primary is unavailable.
+  /// Asynchronously executes the logic for _fetchRoute.
   Future<void> _fetchRoute() async {
     try {
       final coords =
@@ -159,6 +163,7 @@ class _OrderTrackingScreenState extends State<OrderTrackingScreen> {
   /// Starts a periodic timer to simulate or fetch the driver's movement every 3 seconds.
   /// For orderIndex 0, fetches real position from the FastAPI server.
   /// For other orders, simulates movement along the route.
+  /// Executes the logic for _startDriverMovement.
   void _startDriverMovement() {
     _movementTimer = Timer.periodic(const Duration(seconds: 3), (timer) async {
       if (!mounted) return;

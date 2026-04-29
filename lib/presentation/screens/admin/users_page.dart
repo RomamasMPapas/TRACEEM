@@ -4,6 +4,7 @@ import 'dart:math';
 
 /// Admin page that displays all registered users in a data table streamed from Firestore.
 /// Shows their username, email, region, role, online status, and allows quick order creation.
+/// The [UsersPage] class is responsible for managing its respective UI components and state.
 class UsersPage extends StatelessWidget {
   const UsersPage({super.key});
 
@@ -171,6 +172,7 @@ class UsersPage extends StatelessWidget {
 
   /// Creates a quick test order in Firestore assigned to [userId] starting from IT Park, Cebu.
   /// Shows a success or error snack bar after the operation.
+  /// Asynchronously executes the logic for _createQuickOrder.
   Future<void> _createQuickOrder(BuildContext context, String userId) async {
     final random = Random();
     final orderNum =

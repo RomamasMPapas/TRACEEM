@@ -17,6 +17,7 @@ import 'user_reports_screen.dart';
 
 /// The main screen shown to an authenticated user.
 /// Hosts the Book/Track tabs, notification badge, profile view, and the complaint/report button.
+/// The [HomeScreen] class is responsible for managing its respective UI components and state.
 class HomeScreen extends StatefulWidget {
   final UserEntity user;
   const HomeScreen({super.key, required this.user});
@@ -25,6 +26,7 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
+/// The [_HomeScreenState] class is responsible for managing its respective UI components and state.
 class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0; // 0 for BOOK, 1 for TRACK
   bool _isProfileView = false;
@@ -49,6 +51,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   /// Updates the user's `isOnline` field in Firestore to track their real-time online presence.
+  /// Asynchronously executes the logic for _setUserOnlineStatus.
   Future<void> _setUserOnlineStatus(bool isOnline) async {
     try {
       await FirebaseFirestore.instance
@@ -61,6 +64,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   /// Auto-detect user's region based on GPS location
+  /// Asynchronously executes the logic for _detectUserRegion.
   Future<void> _detectUserRegion() async {
     try {
       final region = await LocationService.detectCurrentRegion();
@@ -272,6 +276,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   /// Shows a dialog allowing the user to write and submit a complaint or report.
   /// Also provides a button to navigate to their report history.
+  /// Executes the logic for _showComplaintDialog.
   void _showComplaintDialog(BuildContext context) {
     final controller = TextEditingController();
     // Capture the context of the HomeScreen for the push later
@@ -339,6 +344,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   /// Submits the user's complaint text to the Firestore 'complaints' collection.
   /// Shows a success or error snack bar depending on the result.
+  /// Asynchronously executes the logic for _submitComplaint.
   Future<void> _submitComplaint(String description) async {
     try {
       final user = widget.user;

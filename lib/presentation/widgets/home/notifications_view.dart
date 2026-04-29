@@ -5,6 +5,7 @@ import '../../../domain/entities/user_entity.dart';
 
 /// A dialog widget that displays a mixed list of static and dynamic (Firestore) notifications.
 /// Dynamic entries show resolved complaint responses; static entries show welcome and promo messages.
+/// The [NotificationsDialog] class is responsible for managing its respective UI components and state.
 class NotificationsDialog extends StatelessWidget {
   final UserEntity user;
 

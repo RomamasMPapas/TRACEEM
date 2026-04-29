@@ -26,6 +26,7 @@ void main() async {
 
 /// The root widget of the TRACE EM application.
 /// Sets up the [MultiBlocProvider] with [AuthBloc] and [OrderBloc], then loads the [SplashScreen].
+/// The [MyApp] class is responsible for managing its respective UI components and state.
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 

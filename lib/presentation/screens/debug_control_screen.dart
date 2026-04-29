@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 
 /// A developer-only screen for testing Firebase data directly.
 /// Allows creating test orders, updating progress, and simulating live driver movement.
+/// The [DebugControlScreen] class is responsible for managing its respective UI components and state.
 class DebugControlScreen extends StatefulWidget {
   const DebugControlScreen({super.key});
 
@@ -15,6 +16,7 @@ class DebugControlScreen extends StatefulWidget {
   State<DebugControlScreen> createState() => _DebugControlScreenState();
 }
 
+/// The [_DebugControlScreenState] class is responsible for managing its respective UI components and state.
 class _DebugControlScreenState extends State<DebugControlScreen> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -28,6 +30,7 @@ class _DebugControlScreenState extends State<DebugControlScreen> {
   }
 
   /// Creates a new test order in Firestore under the currently authenticated user.
+  /// Asynchronously executes the logic for _createTestOrder.
   Future<void> _createTestOrder() async {
     final user = _auth.currentUser;
     if (user == null) {
@@ -84,6 +87,7 @@ class _DebugControlScreenState extends State<DebugControlScreen> {
 
   /// Toggles a simulation timer that moves a driver marker between IT Park and Parkmall.
   /// Updates both Firestore and the FastAPI tracking server every 2 seconds.
+  /// Executes the logic for _toggleSimulation.
   void _toggleSimulation(String orderId) {
     if (_isSimulating) {
       _simulationTimer?.cancel();

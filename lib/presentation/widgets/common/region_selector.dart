@@ -3,6 +3,7 @@ import '../../../core/services/location_service.dart';
 import '../../../core/config/philippine_regions.dart';
 
 /// Widget to display current detected region with manual override option
+/// The [RegionSelector] class is responsible for managing its respective UI components and state.
 class RegionSelector extends StatelessWidget {
   final String? currentRegion;
   final VoidCallback? onRefresh;
@@ -44,6 +45,7 @@ class RegionSelector extends StatelessWidget {
 }
 
 /// Dialog to manually select a region
+/// The [RegionSelectorDialog] class is responsible for managing its respective UI components and state.
 class RegionSelectorDialog extends StatelessWidget {
   final String? currentRegion;
 

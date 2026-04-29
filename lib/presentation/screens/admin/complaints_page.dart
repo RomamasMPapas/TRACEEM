@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 
 /// Admin page that lists all user complaints/reports streamed from Firestore.
 /// Allows the admin to expand each complaint and submit a response to resolve it.
+/// The [ComplaintsPage] class is responsible for managing its respective UI components and state.
 class ComplaintsPage extends StatefulWidget {
   const ComplaintsPage({super.key});
 
@@ -11,6 +12,7 @@ class ComplaintsPage extends StatefulWidget {
   State<ComplaintsPage> createState() => _ComplaintsPageState();
 }
 
+/// The [_ComplaintsPageState] class is responsible for managing its respective UI components and state.
 class _ComplaintsPageState extends State<ComplaintsPage> {
   bool _sortDescending = true;
   String _selectedYear = 'All';
@@ -23,6 +25,7 @@ class _ComplaintsPageState extends State<ComplaintsPage> {
   final List<String> _days = ['All', ...List.generate(31, (i) => (i + 1).toString())];
   final List<String> _vehicles = ['All', 'Motorcycle', 'Taxi'];
 
+  /// Builds and returns the _buildDropdown custom widget component.
   Widget _buildDropdown(String value, List<String> items, Function(String?) onChanged) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10),
@@ -274,6 +277,7 @@ class _ComplaintsPageState extends State<ComplaintsPage> {
 
   /// Shows a dialog for the admin to type and submit a response to a complaint.
   /// Marks the complaint as 'resolved' in Firestore upon submission.
+  /// Executes the logic for _showResponseDialog.
   void _showResponseDialog(BuildContext context, String docId) {
     final controller = TextEditingController();
     showDialog(

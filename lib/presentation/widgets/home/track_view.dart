@@ -7,6 +7,7 @@ import '../../screens/order_tracking_screen.dart';
 
 /// The tracking tab widget on the Home screen.
 /// Displays the user's active orders fetched from [OrderBloc] and navigates to [OrderTrackingScreen] on tap.
+/// The [TrackView] class is responsible for managing its respective UI components and state.
 class TrackView extends StatelessWidget {
   const TrackView({super.key});
 

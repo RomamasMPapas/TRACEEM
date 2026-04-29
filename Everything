@@ -7316,7 +7316,7 @@ class BookViewState extends State<BookView> {
                     decoration: BoxDecoration(
                       color: Colors.grey.shade50,
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.grey.shade200, style: BorderStyle.dash),
+                      border: Border.all(color: Colors.grey.shade200),
                     ),
                     child: Center(
                       child: Text(

@@ -68,6 +68,8 @@ class _DriversPageState extends State<DriversPage> {
 
   String _selectedType = 'All';
 
+  /// Filters the driver list based on the search query and the selected vehicle type.
+  /// Updates the [_filteredDrivers] state variable to immediately reflect in the UI.
   void _filterDrivers([String? query]) {
     final searchQuery = query ?? _searchController.text;
     setState(() {
@@ -82,6 +84,8 @@ class _DriversPageState extends State<DriversPage> {
     });
   }
 
+  /// Displays a confirmation dialog and then fires a driver by removing them from the
+  /// mock database. Also updates the UI and dashboard metrics if applicable.
   void _fireDriver(String driverId, String driverName) {
     showDialog(
       context: context,

@@ -20,25 +20,58 @@ class BookView extends StatefulWidget {
 }
 
 class BookViewState extends State<BookView> {
+  // === MAP & ROUTING STATE ===
+  /// The default map center, initialized based on the user's detected region.
   late LatLng _initialCenter;
-  LatLng? _fromLatLng; // pin location from FROM address
-  LatLng? _toLatLng; // pin location from TO address
+  
+  /// The precise coordinate pin for the pick-up location.
+  LatLng? _fromLatLng;
+  
+  /// The precise coordinate pin for the destination.
+  LatLng? _toLatLng;
+  
+  /// Toggles the UI between the standard map view and the booking/details view.
   bool _isBookingMode = false;
+  
+  /// Tracks if the app is currently geocoding an address (currently unused flag).
   final bool _isGeocoding = false;
+  
+  /// Tracks if the app is currently fetching the route polyline from the routing server.
   bool _isFetchingRoute = false;
+  
+  /// The collection of coordinates that form the drawn polyline path on the map.
   List<LatLng> _routePoints = [];
+  
+  /// The total physical distance of the route in meters, used to calculate the fare.
   double? _routeDistanceMeters;
+  
+  /// The active vehicle type selection ('Motorcycle' or 'Taxi').
   String _selectedVehicle = 'Motorcycle';
+  
+  /// Controls the map's movement, zoom, and interactions programmatically.
   final MapController _mapController = MapController();
 
-  // DRIVE SIMULATION STATE
+  // === DRIVE SIMULATION STATE ===
+  /// Tracks whether the animated drive sequence is currently running.
   bool _isSimulatingDrive = false;
+  
+  /// The active coordinate of the vehicle marker as it moves along the polyline.
   LatLng? _animatedVehiclePos;
+  
+  /// The current index of the route points array the simulated vehicle is at.
   int _currentRouteIndex = 0;
+  
+  /// The timer that ticks to progress the simulated vehicle along the path.
   Timer? _simulationTimer;
+  
+  /// Holds the data dictionary of the driver currently assigned to the user.
   Map<String, dynamic>? _currentDriver;
+  
+  /// Controls the visibility of the "Recent Rides" history block in the search menu.
   bool _showHistory = true;
-  bool _hasSelectedVehicle = false; // Tracks if user explicitly chose a vehicle
+  
+  /// Tracks if the user has explicitly selected a vehicle, which allows confirming the booking.
+  bool _hasSelectedVehicle = false;
 
   final List<Map<String, dynamic>> _rideHistory = [
     {

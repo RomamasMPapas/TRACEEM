@@ -139,6 +139,25 @@ class BookViewState extends State<BookView> {
     });
   }
 
+  /// Programmatically sets the FROM and TO locations.
+  /// Used when clicking an item from the History tab.
+  void setLocations({
+    required String fromName,
+    required LatLng fromCoords,
+    required String toName,
+    required LatLng toCoords,
+  }) {
+    setState(() {
+      _isBookingMode = true;
+      _fromController.text = fromName;
+      _fromLatLng = fromCoords;
+      _toController.text = toName;
+      _toLatLng = toCoords;
+      _showHistory = false;
+      _fetchRoute();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     double screenHeight = MediaQuery.of(context).size.height;

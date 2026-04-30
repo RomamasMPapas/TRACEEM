@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-/// Custom bottom navigation bar for the Home screen with BOOK tab.
-/// (TRACK tab has been removed to focus on riding part)
+/// Custom bottom navigation bar for the Home screen with 4 tabs:
+/// HOME | NOTIFICATION | HISTORY | PROFILE
 class CustomBottomNav extends StatelessWidget {
   final int currentIndex;
   final ValueChanged<int> onTabSelected;
@@ -14,67 +14,57 @@ class CustomBottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          height: 60,
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            border: Border(top: BorderSide(color: Colors.black12)),
+    return Container(
+      height: 70,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 10,
+            offset: const Offset(0, -5),
           ),
-          child: Row(
-            children: [
-              Expanded(
-                child: GestureDetector(
-                  onTap: () => onTabSelected(0),
-                  child: Center(
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.local_shipping,
-                          size: 20,
-                          color: Colors.black,
-                        ),
-                        const SizedBox(width: 8),
-                        const Text(
-                          'BOOK',
-                          style: TextStyle(
-                            fontWeight: FontWeight.w900,
-                            fontSize: 18,
-                            color: Colors.black,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
+        ],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          _buildNavItem(0, Icons.home, 'HOME'),
+          _buildNavItem(1, Icons.notifications, 'NOTIFS'),
+          _buildNavItem(2, Icons.history, 'HISTORY'),
+          _buildNavItem(3, Icons.menu, 'PROFILE'), // Three lines icon as requested
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNavItem(int index, IconData icon, String label) {
+    bool isSelected = currentIndex == index;
+    return GestureDetector(
+      onTap: () => onTabSelected(index),
+      behavior: HitTestBehavior.opaque,
+      child: SizedBox(
+        width: 80,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              icon,
+              color: isSelected ? const Color(0xFF4C8CFF) : Colors.grey,
+              size: 26,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: TextStyle(
+                color: isSelected ? const Color(0xFF4C8CFF) : Colors.grey,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                fontSize: 10,
               ),
-            ],
-          ),
+            ),
+          ],
         ),
-        Container(
-          width: double.infinity,
-          height: 80,
-          color: const Color(0xFF4C8CFF),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Text(
-                'TRACE EM',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18,
-                ),
-              ),
-              const SizedBox(height: 5),
-              const Icon(Icons.local_shipping, color: Colors.white, size: 30),
-            ],
-          ),
-        ),
-      ],
+      ),
     );
   }
 }

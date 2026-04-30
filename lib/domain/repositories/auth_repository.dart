@@ -23,6 +23,7 @@ abstract class AuthRepository {
     required String password,
     required String phoneNumber,
     required String address,
+    String? photoUrl,
   });
   /// Fetches the currently authenticated user, or null if no session is active.
   Future<Either<Failure, UserEntity?>> getCurrentUser();

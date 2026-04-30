@@ -57,16 +57,22 @@ class _ReceiptsPageState extends State<ReceiptsPage> {
     _filteredReceipts = _allReceipts;
   }
 
-  /// Filters the receipts list based on the user's search query.
-  /// Matches the query against the order ID, user name, and vehicle type.
-  void _filterReceipts(String query) {
+  String _selectedType = 'All';
+
+  /// Filters the receipts list based on the user's search query and selected vehicle type.
+  void _filterReceipts([String? query]) {
+    final searchQuery = query ?? _searchController.text;
     setState(() {
-      _filteredReceipts = _allReceipts
-          .where((r) =>
-              r['orderId'].toLowerCase().contains(query.toLowerCase()) ||
-              r['user'].toLowerCase().contains(query.toLowerCase()) ||
-              r['type'].toLowerCase().contains(query.toLowerCase()))
-          .toList();
+      _filteredReceipts = _allReceipts.where((r) {
+        final matchesSearch =
+            r['orderId'].toLowerCase().contains(searchQuery.toLowerCase()) ||
+            r['user'].toLowerCase().contains(searchQuery.toLowerCase()) ||
+            r['type'].toLowerCase().contains(searchQuery.toLowerCase());
+
+        final matchesType = _selectedType == 'All' || r['type'] == _selectedType;
+
+        return matchesSearch && matchesType;
+      }).toList();
     });
   }
 
@@ -75,6 +81,56 @@ class _ReceiptsPageState extends State<ReceiptsPage> {
   Widget build(BuildContext context) {
     return Column(
       children: [
+        // "Folder" Tabs for vehicle types
+        Container(
+          margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+          decoration: BoxDecoration(
+            color: Colors.grey.shade200,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Row(
+            children: ['All', 'Motorcycle', 'Taxi'].map((type) {
+              final isSelected = _selectedType == type;
+              return Expanded(
+                child: GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      _selectedType = type;
+                      _filterReceipts();
+                    });
+                  },
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    decoration: BoxDecoration(
+                      color:
+                          isSelected ? const Color(0xFF4C8CFF) : Colors.transparent,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: isSelected
+                          ? [
+                              BoxShadow(
+                                color: Colors.blue.withValues(alpha: 0.3),
+                                blurRadius: 8,
+                                offset: const Offset(0, 4),
+                              )
+                            ]
+                          : [],
+                    ),
+                    child: Center(
+                      child: Text(
+                        type,
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: isSelected ? Colors.white : Colors.grey.shade700,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ),
         Padding(
           padding: const EdgeInsets.all(16.0),
           child: TextField(

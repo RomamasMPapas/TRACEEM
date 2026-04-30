@@ -19,6 +19,7 @@ class UpdateProfileUseCase {
     required String password,
     required String phoneNumber,
     required String address,
+    String? photoUrl,
   }) async {
     return await repository.updateProfile(
       id: id,
@@ -27,6 +28,7 @@ class UpdateProfileUseCase {
       password: password,
       phoneNumber: phoneNumber,
       address: address,
+      photoUrl: photoUrl,
     );
   }
 }

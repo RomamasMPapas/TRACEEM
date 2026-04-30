@@ -56,6 +56,68 @@ class _ProfileViewState extends State<ProfileView> {
         password: _passwordController.text,
         phoneNumber: _phoneNumberController.text,
         address: _addressController.text,
+        photoUrl: widget.user.photoUrl,
+      ),
+    );
+  }
+
+  /// Shows a dialog to enter a new photo URL.
+  void _showPhotoUrlDialog() {
+    final TextEditingController urlController =
+        TextEditingController(text: widget.user.photoUrl);
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Update Profile Picture'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              'Enter a direct image URL (e.g., from an image hosting site) to permanently update your profile picture.',
+              style: TextStyle(fontSize: 12, color: Colors.grey),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: urlController,
+              decoration: InputDecoration(
+                hintText: 'https://example.com/image.png',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                prefixIcon: const Icon(Icons.link),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('CANCEL'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              context.read<AuthBloc>().add(
+                    UpdateProfileSubmitted(
+                      id: widget.user.id,
+                      fullName: _fullNameController.text,
+                      email: _emailController.text,
+                      password: _passwordController.text,
+                      phoneNumber: _phoneNumberController.text,
+                      address: _addressController.text,
+                      photoUrl: urlController.text.trim().isEmpty
+                          ? null
+                          : urlController.text.trim(),
+                    ),
+                  );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF4C8CFF),
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('UPDATE PHOTO'),
+          ),
+        ],
       ),
     );
   }
@@ -110,40 +172,47 @@ class _ProfileViewState extends State<ProfileView> {
                 Stack(
                   alignment: Alignment.bottomRight,
                   children: [
-                    Container(
-                      width: 110,
-                      height: 110,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.white,
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.2),
-                            blurRadius: 15,
-                            offset: const Offset(0, 5),
+                    GestureDetector(
+                      onTap: _showPhotoUrlDialog,
+                      child: Container(
+                        width: 110,
+                        height: 110,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.white,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.2),
+                              blurRadius: 15,
+                              offset: const Offset(0, 5),
+                            ),
+                          ],
+                          border: Border.all(color: Colors.white, width: 4),
+                        ),
+                        child: ClipOval(
+                          child: Image.network(
+                            widget.user.photoUrl ??
+                                'https://robohash.org/${widget.user.username}?set=set4',
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) =>
+                                const Icon(Icons.person, size: 60, color: Colors.grey),
                           ),
-                        ],
-                        border: Border.all(color: Colors.white, width: 4),
-                      ),
-                      child: ClipOval(
-                        child: Image.network(
-                          'https://robohash.org/${widget.user.username}?set=set4',
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) =>
-                              const Icon(Icons.person, size: 60, color: Colors.grey),
                         ),
                       ),
                     ),
-                    Container(
-                      padding: const EdgeInsets.all(6),
-                      decoration: const BoxDecoration(
-                        color: Color(0xFF4C8CFF),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.camera_alt,
-                        color: Colors.white,
-                        size: 18,
+                    GestureDetector(
+                      onTap: _showPhotoUrlDialog,
+                      child: Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: const BoxDecoration(
+                          color: Color(0xFF4C8CFF),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.camera_alt,
+                          color: Colors.white,
+                          size: 18,
+                        ),
                       ),
                     ),
                   ],

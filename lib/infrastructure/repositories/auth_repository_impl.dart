@@ -47,6 +47,7 @@ class AuthRepositoryImpl implements AuthRepository {
             address: data['address'] ?? '',
             region: data['region'] ?? 'Region 7',
             role: data['role'] ?? 'user',
+            photoUrl: data['photoUrl'],
           ),
         );
       } else {
@@ -125,6 +126,7 @@ class AuthRepositoryImpl implements AuthRepository {
     required String password,
     required String phoneNumber,
     required String address,
+    String? photoUrl,
   }) async {
     try {
       final user = _firebaseAuth.currentUser;
@@ -141,11 +143,15 @@ class AuthRepositoryImpl implements AuthRepository {
       }
 
       // Update Firestore
-      await _firestore.collection('users').doc(user.uid).update({
+      final updateData = {
         'username': fullName,
         'phoneNumber': phoneNumber,
         'address': address,
-      });
+      };
+      if (photoUrl != null) {
+        updateData['photoUrl'] = photoUrl;
+      }
+      await _firestore.collection('users').doc(user.uid).update(updateData);
 
       // Fetch updated data to return correct entity
       final docSnapshot = await _firestore
@@ -163,6 +169,7 @@ class AuthRepositoryImpl implements AuthRepository {
           address: data['address'] ?? address,
           region: data['region'] ?? 'Region 7',
           role: data['role'] ?? 'user',
+          photoUrl: data['photoUrl'],
         ),
       );
     } on FirebaseAuthException catch (e) {
@@ -195,6 +202,7 @@ class AuthRepositoryImpl implements AuthRepository {
             address: data['address'] ?? '',
             region: data['region'] ?? 'Region 7',
             role: data['role'] ?? 'user',
+            photoUrl: data['photoUrl'],
           ),
         );
       }

@@ -221,7 +221,9 @@ class _RatingsPageState extends State<RatingsPage> {
                             ),
                             const SizedBox(width: 8),
                             Icon(
-                              Icons.directions_car_outlined,
+                              rating['type'] == 'Motorcycle'
+                                  ? Icons.two_wheeler
+                                  : Icons.directions_car_outlined,
                               size: 14,
                               color: Colors.grey.shade600,
                             ),

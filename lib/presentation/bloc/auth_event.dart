@@ -50,6 +50,7 @@ class UpdateProfileSubmitted extends AuthEvent {
   final String password;
   final String phoneNumber;
   final String address;
+  final String? photoUrl;
 
   const UpdateProfileSubmitted({
     required this.id,
@@ -58,6 +59,7 @@ class UpdateProfileSubmitted extends AuthEvent {
     required this.password,
     required this.phoneNumber,
     required this.address,
+    this.photoUrl,
   });
 
   @override
@@ -68,6 +70,7 @@ class UpdateProfileSubmitted extends AuthEvent {
     password,
     phoneNumber,
     address,
+    photoUrl,
   ];
 }
 

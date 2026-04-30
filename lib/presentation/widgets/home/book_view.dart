@@ -314,8 +314,6 @@ class BookViewState extends State<BookView> {
                       ),
                     ],
                   ),
-                  if (_showHistory && _routePoints.isEmpty)
-                    _buildHistorySection(),
                 ],
               ),
             ),
@@ -573,63 +571,6 @@ class BookViewState extends State<BookView> {
             ),
             const Icon(Icons.search, size: 18, color: Color(0xFF4C8CFF)),
           ],
-        ),
-      ),
-    );
-  }
-
-  /// Builds the "Recent Rides" section as a compact, integrated list.
-  /// Builds and returns the _buildHistorySection custom widget component.
-  Widget _buildHistorySection() {
-    return Column(
-      children: [
-        const SizedBox(height: 8),
-        ..._rideHistory.take(2).map((ride) => _buildHistoryItem(ride)),
-      ],
-    );
-  }
-
-  /// Builds a single history item row.
-  /// Builds and returns the _buildHistoryItem custom widget component.
-  Widget _buildHistoryItem(Map<String, dynamic> ride) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 6),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.92),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Colors.grey.shade200),
-      ),
-      child: InkWell(
-        onTap: () {
-          setState(() {
-            _fromController.text = ride['fromName'];
-            _fromLatLng = ride['fromCoords'];
-            _toController.text = ride['toName'];
-            _toLatLng = ride['toCoords'];
-            _fetchRoute();
-            _showHistory = false;
-          });
-        },
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          child: Row(
-            children: [
-              const Icon(Icons.history, size: 14, color: Colors.blueGrey),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  "${ride['fromName']} → ${ride['toName']}",
-                  style: const TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.black87,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              const Icon(Icons.chevron_right, size: 14, color: Colors.grey),
-            ],
-          ),
         ),
       ),
     );

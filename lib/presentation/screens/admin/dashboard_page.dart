@@ -51,6 +51,7 @@ class _DashboardPageState extends State<DashboardPage> {
   int _touchedBarIndex = -1;
   int _touchedPieIndex = -1;
 
+
   @override
   Widget build(BuildContext context) {
     // Filter ratings based on selected type
@@ -221,10 +222,51 @@ class _DashboardPageState extends State<DashboardPage> {
               height: 200,
               child: PieChart(
                 PieChartData(
+                  pieTouchData: PieTouchData(
+                    touchCallback: (FlTouchEvent event, pieTouchResponse) {
+                      setState(() {
+                        if (!event.isInterestedForInteractions ||
+                            pieTouchResponse == null ||
+                            pieTouchResponse.touchedSection == null) {
+                          _touchedPieIndex = -1;
+                          return;
+                        }
+                        _touchedPieIndex =
+                            pieTouchResponse.touchedSection!.touchedSectionIndex;
+                      });
+                    },
+                  ),
                   sections: [
-                    PieChartSectionData(color: Colors.green, value: s.toDouble(), title: 'S', radius: 50, titleStyle: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                    PieChartSectionData(color: Colors.amber, value: n.toDouble(), title: 'N', radius: 50, titleStyle: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                    PieChartSectionData(color: Colors.red, value: d.toDouble(), title: 'D', radius: 50, titleStyle: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                    PieChartSectionData(
+                      color: Colors.green,
+                      value: s.toDouble(),
+                      title: 'S',
+                      radius: _touchedPieIndex == 0 ? 60 : 50,
+                      titleStyle: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    PieChartSectionData(
+                      color: Colors.amber,
+                      value: n.toDouble(),
+                      title: 'N',
+                      radius: _touchedPieIndex == 1 ? 60 : 50,
+                      titleStyle: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    PieChartSectionData(
+                      color: Colors.red,
+                      value: d.toDouble(),
+                      title: 'D',
+                      radius: _touchedPieIndex == 2 ? 60 : 50,
+                      titleStyle: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -266,35 +308,63 @@ class _DashboardPageState extends State<DashboardPage> {
               height: 250,
               child: LineChart(
                 LineChartData(
-                  gridData: FlGridData(show: true, drawVerticalLine: false, getDrawingHorizontalLine: (v) => FlLine(color: Colors.grey.shade200, strokeWidth: 1)),
+                  gridData: FlGridData(
+                    show: true,
+                    drawVerticalLine: false,
+                    getDrawingHorizontalLine: (v) =>
+                        FlLine(color: Colors.grey.shade200, strokeWidth: 1),
+                  ),
                   titlesData: FlTitlesData(
-                    bottomTitles: AxisTitles(sideTitles: SideTitles(showTitles: true, getTitlesWidget: (v, m) => Text(['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'][v.toInt()], style: const TextStyle(fontSize: 12)))),
-                    leftTitles: AxisTitles(sideTitles: SideTitles(showTitles: true, reservedSize: 45, getTitlesWidget: (v, m) => Text('₱${(v/1000).toInt()}K', style: const TextStyle(fontSize: 10)))),
-                    topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                    rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                    bottomTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        getTitlesWidget: (v, m) => Text(
+                          ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'][v.toInt()],
+                          style: const TextStyle(fontSize: 12),
+                        ),
+                      ),
+                    ),
+                    leftTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        reservedSize: 45,
+                        getTitlesWidget: (v, m) => Text(
+                          '₱${(v / 1000).toInt()}k',
+                          style: const TextStyle(fontSize: 10),
+                        ),
+                      ),
+                    ),
+                    topTitles:
+                        const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                    rightTitles:
+                        const AxisTitles(sideTitles: SideTitles(showTitles: false)),
                   ),
                   borderData: FlBorderData(show: false),
                   lineBarsData: [
-                    if (_selectedType == 'All' || _selectedType == 'Motorcycle')
-                      LineChartBarData(
-                        spots: _motorcycleProfit,
-                        isCurved: true,
-                        color: Colors.orange,
-                        barWidth: 4,
-                        isStrokeCapRound: true,
-                        dotData: const FlDotData(show: true),
-                        belowBarData: BarAreaData(show: true, color: Colors.orange.withValues(alpha: 0.1)),
+                    LineChartBarData(
+                      spots: _motorcycleProfit,
+                      isCurved: true,
+                      color: const Color(0xFF4C8CFF),
+                      barWidth: 4,
+                      isStrokeCapRound: true,
+                      dotData: const FlDotData(show: true),
+                      belowBarData: BarAreaData(
+                        show: true,
+                        color: const Color(0xFF4C8CFF).withValues(alpha: 0.1),
                       ),
-                    if (_selectedType == 'All' || _selectedType == 'Taxi')
-                      LineChartBarData(
-                        spots: _taxiProfit,
-                        isCurved: true,
-                        color: const Color(0xFF4C8CFF),
-                        barWidth: 4,
-                        isStrokeCapRound: true,
-                        dotData: const FlDotData(show: true),
-                        belowBarData: BarAreaData(show: true, color: const Color(0xFF4C8CFF).withValues(alpha: 0.1)),
+                    ),
+                    LineChartBarData(
+                      spots: _taxiProfit,
+                      isCurved: true,
+                      color: Colors.green,
+                      barWidth: 4,
+                      isStrokeCapRound: true,
+                      dotData: const FlDotData(show: true),
+                      belowBarData: BarAreaData(
+                        show: true,
+                        color: Colors.green.withValues(alpha: 0.1),
                       ),
+                    ),
                   ],
                 ),
               ),

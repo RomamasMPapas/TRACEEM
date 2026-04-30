@@ -190,6 +190,9 @@
 🔵 ***lib/presentation/widgets/home/bottom_nav.dart***
 🟢 ---The custom bottom navigation bar widget used to switch between tabs on the home screen.---
 
+🔵 ***lib/presentation/widgets/home/history_view.dart***
+🟢 ---The tab view displaying a user's past ride history with one-tap re-booking functionality.---
+
 🔵 ***lib/presentation/widgets/home/notifications_view.dart***
 🟢 ---The tab view responsible for displaying recent alerts and system notifications to the user.---
 

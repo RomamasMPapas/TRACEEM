@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 
-/// Custom bottom navigation bar for the Home screen with BOOK and TRACK tabs.
-/// Also shows a branded TRACE EM footer bar with a truck icon below the tabs.
-/// The [CustomBottomNav] class is responsible for managing its respective UI components and state.
+/// Custom bottom navigation bar for the Home screen with BOOK tab.
+/// (TRACK tab has been removed to focus on riding part)
 class CustomBottomNav extends StatelessWidget {
   final int currentIndex;
   final ValueChanged<int> onTabSelected;
@@ -36,49 +35,15 @@ class CustomBottomNav extends StatelessWidget {
                         Icon(
                           Icons.local_shipping,
                           size: 20,
-                          color: currentIndex == 0
-                              ? Colors.black
-                              : Colors.grey[400],
+                          color: Colors.black,
                         ),
                         const SizedBox(width: 8),
-                        Text(
+                        const Text(
                           'BOOK',
                           style: TextStyle(
                             fontWeight: FontWeight.w900,
                             fontSize: 18,
-                            color: currentIndex == 0
-                                ? Colors.black
-                                : Colors.grey[400],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              Expanded(
-                child: GestureDetector(
-                  onTap: () => onTabSelected(1),
-                  child: Center(
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.location_on,
-                          size: 20,
-                          color: currentIndex == 1
-                              ? Colors.black
-                              : Colors.grey[400],
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          'TRACK',
-                          style: TextStyle(
-                            fontWeight: FontWeight.w900,
-                            fontSize: 18,
-                            color: currentIndex == 1
-                                ? Colors.black
-                                : Colors.grey[400],
+                            color: Colors.black,
                           ),
                         ),
                       ],

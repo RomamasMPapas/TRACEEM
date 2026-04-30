@@ -204,6 +204,84 @@ class AuthRepositoryImpl implements AuthRepository {
     }
   }
 
+  /// Starts the Firebase Phone Auth verification process.
+  @override
+  Future<Either<Failure, void>> verifyPhoneNumber({
+    required String phoneNumber,
+    required Function(String verificationId) onCodeSent,
+    required Function(Failure failure) onVerificationFailed,
+  }) async {
+    try {
+      await _firebaseAuth.verifyPhoneNumber(
+        phoneNumber: phoneNumber,
+        verificationCompleted: (PhoneAuthCredential credential) async {
+          // This can happen automatically on some Android devices
+          await _firebaseAuth.signInWithCredential(credential);
+        },
+        verificationFailed: (FirebaseAuthException e) {
+          onVerificationFailed(AuthFailure(e.message ?? 'Verification failed'));
+        },
+        codeSent: (String verificationId, int? resendToken) {
+          onCodeSent(verificationId);
+        },
+        codeAutoRetrievalTimeout: (String verificationId) {
+          // Handle timeout if needed
+        },
+      );
+      return const Right(null);
+    } catch (e) {
+      return Left(AuthFailure(e.toString()));
+    }
+  }
+
+  /// Completes the sign-in using the verification ID and the SMS code provided by the user.
+  @override
+  Future<Either<Failure, UserEntity>> signInWithOtp({
+    required String verificationId,
+    required String smsCode,
+  }) async {
+    try {
+      final credential = PhoneAuthProvider.credential(
+        verificationId: verificationId,
+        smsCode: smsCode,
+      );
+
+      final userCredential = await _firebaseAuth.signInWithCredential(credential);
+      final user = userCredential.user;
+
+      if (user == null) return Left(AuthFailure('Sign in failed'));
+
+      // Fetch or create user in Firestore
+      final docSnapshot = await _firestore.collection('users').doc(user.uid).get();
+
+      if (!docSnapshot.exists) {
+        // For new users signed in via Phone, we create a default profile
+        await _firestore.collection('users').doc(user.uid).set({
+          'phoneNumber': user.phoneNumber ?? '',
+          'role': 'user',
+          'createdAt': FieldValue.serverTimestamp(),
+        });
+      }
+
+      final data = (await _firestore.collection('users').doc(user.uid).get()).data()!;
+
+      return Right(
+        UserEntity(
+          id: user.uid,
+          username: data['username'] ?? '',
+          email: data['email'] ?? '',
+          phoneNumber: user.phoneNumber ?? '',
+          address: data['address'] ?? '',
+          role: data['role'] ?? 'user',
+        ),
+      );
+    } on FirebaseAuthException catch (e) {
+      return Left(AuthFailure(e.message ?? 'OTP Verification failed'));
+    } catch (e) {
+      return Left(AuthFailure(e.toString()));
+    }
+  }
+
   /// Signs the current user out of their Firebase session.
   @override
   Future<Either<Failure, void>> logout() async {

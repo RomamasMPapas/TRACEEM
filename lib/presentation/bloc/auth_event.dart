@@ -71,5 +71,29 @@ class UpdateProfileSubmitted extends AuthEvent {
   ];
 }
 
+/// Fired when the user requests phone number verification.
+class AuthPhoneVerificationRequested extends AuthEvent {
+  final String phoneNumber;
+
+  const AuthPhoneVerificationRequested(this.phoneNumber);
+
+  @override
+  List<Object?> get props => [phoneNumber];
+}
+
+/// Fired when the user submits the OTP code sent to their phone.
+class AuthOtpSubmitted extends AuthEvent {
+  final String verificationId;
+  final String smsCode;
+
+  const AuthOtpSubmitted({
+    required this.verificationId,
+    required this.smsCode,
+  });
+
+  @override
+  List<Object?> get props => [verificationId, smsCode];
+}
+
 /// Fired when the user taps the logout button.
 class LogoutRequested extends AuthEvent {}

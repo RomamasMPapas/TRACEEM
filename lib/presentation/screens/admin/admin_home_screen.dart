@@ -8,15 +8,13 @@ import '../../bloc/auth_state.dart';
 import '../login_screen.dart';
 import 'users_page.dart';
 import 'complaints_page.dart';
-import 'orders_management_page.dart';
 import 'receipts_page.dart';
 import 'ratings_page.dart';
 import 'drivers_page.dart';
 import 'dashboard_page.dart';
 
-/// The main admin dashboard screen. Hosts Users, Orders, and Complaints tabs.
-/// Adapts to wide screens with a [NavigationRail] and narrow screens with a [BottomNavigationBar].
-/// The [AdminHomeScreen] class is responsible for managing its respective UI components and state.
+/// The main admin dashboard screen. Hosts Users, Complaints, and Analytics tabs.
+/// (Orders/Tracking tab removed to focus on riding part)
 class AdminHomeScreen extends StatefulWidget {
   final UserEntity admin;
 
@@ -26,7 +24,6 @@ class AdminHomeScreen extends StatefulWidget {
   State<AdminHomeScreen> createState() => _AdminHomeScreenState();
 }
 
-/// The [_AdminHomeScreenState] class is responsible for managing its respective UI components and state.
 class _AdminHomeScreenState extends State<AdminHomeScreen> {
   int _selectedIndex = 0;
 
@@ -42,8 +39,6 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
     super.dispose();
   }
 
-  /// Updates the admin's `isOnline` field in Firestore to track their real-time online presence.
-  /// Asynchronously executes the logic for _setUserOnlineStatus.
   Future<void> _setUserOnlineStatus(bool isOnline) async {
     try {
       await FirebaseFirestore.instance
@@ -125,11 +120,6 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                     label: Text('Users'),
                   ),
                   NavigationRailDestination(
-                    icon: Icon(Icons.shopping_bag_outlined),
-                    selectedIcon: Icon(Icons.shopping_bag),
-                    label: Text('Orders'),
-                  ),
-                  NavigationRailDestination(
                     icon: Icon(Icons.report_gmailerrorred_outlined),
                     selectedIcon: Icon(Icons.report_gmailerrorred),
                     label: Text('Complaints'),
@@ -159,7 +149,6 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                 children: const [
                   DashboardPage(),
                   UsersPage(),
-                  OrdersManagementPage(),
                   ComplaintsPage(),
                   ReceiptsPage(),
                   RatingsPage(),
@@ -174,6 +163,8 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                 currentIndex: _selectedIndex,
                 onTap: (index) => setState(() => _selectedIndex = index),
                 selectedItemColor: const Color(0xFF4C8CFF),
+                unselectedItemColor: Colors.grey,
+                type: BottomNavigationBarType.fixed,
                 items: const [
                   BottomNavigationBarItem(
                     icon: Icon(Icons.dashboard),
@@ -182,10 +173,6 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
                   BottomNavigationBarItem(
                     icon: Icon(Icons.people),
                     label: 'Users',
-                  ),
-                  BottomNavigationBarItem(
-                    icon: Icon(Icons.shopping_bag),
-                    label: 'Orders',
                   ),
                   BottomNavigationBarItem(
                     icon: Icon(Icons.report),

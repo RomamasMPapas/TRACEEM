@@ -27,6 +27,19 @@ abstract class AuthRepository {
   /// Fetches the currently authenticated user, or null if no session is active.
   Future<Either<Failure, UserEntity?>> getCurrentUser();
 
+  /// Starts the phone number verification process.
+  Future<Either<Failure, void>> verifyPhoneNumber({
+    required String phoneNumber,
+    required Function(String verificationId) onCodeSent,
+    required Function(Failure failure) onVerificationFailed,
+  });
+
+  /// Completes the sign-in process using the [verificationId] and [smsCode].
+  Future<Either<Failure, UserEntity>> signInWithOtp({
+    required String verificationId,
+    required String smsCode,
+  });
+
   /// Signs the current user out of the application.
   Future<Either<Failure, void>> logout();
 }

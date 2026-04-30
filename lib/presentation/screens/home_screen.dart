@@ -8,7 +8,6 @@ import '../bloc/order_event.dart';
 import '../bloc/auth_bloc.dart';
 import '../bloc/auth_state.dart';
 import '../widgets/home/book_view.dart';
-import '../widgets/home/track_view.dart';
 import '../widgets/home/bottom_nav.dart';
 import '../widgets/home/profile_view.dart';
 import '../widgets/home/notifications_view.dart';
@@ -16,8 +15,8 @@ import 'debug_control_screen.dart';
 import 'user_reports_screen.dart';
 
 /// The main screen shown to an authenticated user.
-/// Hosts the Book/Track tabs, notification badge, profile view, and the complaint/report button.
-/// The [HomeScreen] class is responsible for managing its respective UI components and state.
+/// Hosts the Book tab, notification badge, profile view, and the complaint/report button.
+/// (Track tab has been removed to focus on riding part)
 class HomeScreen extends StatefulWidget {
   final UserEntity user;
   const HomeScreen({super.key, required this.user});
@@ -26,15 +25,12 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-/// The [_HomeScreenState] class is responsible for managing its respective UI components and state.
 class _HomeScreenState extends State<HomeScreen> {
-  int _currentIndex = 0; // 0 for BOOK, 1 for TRACK
+  final int _currentIndex = 0; // Forced to BOOK
   bool _isProfileView = false;
   String? _detectedRegion;
   final GlobalKey<BookViewState> _bookViewKey = GlobalKey<BookViewState>();
 
-  /// Initializes the screen by fetching orders, detecting the user's GPS region,
-  /// and marking the user as online in Firestore.
   @override
   void initState() {
     super.initState();
@@ -43,15 +39,12 @@ class _HomeScreenState extends State<HomeScreen> {
     _setUserOnlineStatus(true);
   }
 
-  /// Marks the user as offline in Firestore when they leave this screen.
   @override
   void dispose() {
     _setUserOnlineStatus(false);
     super.dispose();
   }
 
-  /// Updates the user's `isOnline` field in Firestore to track their real-time online presence.
-  /// Asynchronously executes the logic for _setUserOnlineStatus.
   Future<void> _setUserOnlineStatus(bool isOnline) async {
     try {
       await FirebaseFirestore.instance
@@ -63,8 +56,6 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  /// Auto-detect user's region based on GPS location
-  /// Asynchronously executes the logic for _detectUserRegion.
   Future<void> _detectUserRegion() async {
     try {
       final region = await LocationService.detectCurrentRegion();
@@ -245,21 +236,19 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           body: _isProfileView
               ? ProfileView(user: currentUser)
-              : (_currentIndex == 0
-                    ? BookView(
-                        key: _bookViewKey,
-                        detectedRegion: _detectedRegion,
-                      )
-                    : const TrackView()),
+              : BookView(
+                  key: _bookViewKey,
+                  detectedRegion: _detectedRegion,
+                ),
           bottomNavigationBar: _isProfileView
               ? null
               : CustomBottomNav(
                   currentIndex: _currentIndex,
                   onTabSelected: (index) {
+                    // index is always 0 now, but we keep the logic for safety
                     if (index == 0) {
                       _bookViewKey.currentState?.cancelBooking();
                     }
-                    setState(() => _currentIndex = index);
                   },
                 ),
           floatingActionButton: _isProfileView
@@ -274,12 +263,8 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  /// Shows a dialog allowing the user to write and submit a complaint or report.
-  /// Also provides a button to navigate to their report history.
-  /// Executes the logic for _showComplaintDialog.
   void _showComplaintDialog(BuildContext context) {
     final controller = TextEditingController();
-    // Capture the context of the HomeScreen for the push later
     final homeScreenContext = context;
 
     showDialog(
@@ -292,9 +277,9 @@ class _HomeScreenState extends State<HomeScreen> {
             IconButton(
               icon: const Icon(Icons.history, color: Color(0xFF4C8CFF)),
               onPressed: () {
-                Navigator.of(dialogContext).pop(); // Close dialog safely
+                Navigator.of(dialogContext).pop();
                 Navigator.push(
-                  homeScreenContext, // Navigate from HomeScreen context
+                  homeScreenContext,
                   MaterialPageRoute(
                     builder: (context) => UserReportsScreen(user: widget.user),
                   ),
@@ -342,9 +327,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  /// Submits the user's complaint text to the Firestore 'complaints' collection.
-  /// Shows a success or error snack bar depending on the result.
-  /// Asynchronously executes the logic for _submitComplaint.
   Future<void> _submitComplaint(String description) async {
     try {
       final user = widget.user;

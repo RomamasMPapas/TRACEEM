@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:http/http.dart' as http;
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../../../core/config/philippine_regions.dart';
 import '../../screens/rating_screen.dart';
 
@@ -868,10 +870,7 @@ class BookViewState extends State<BookView> {
           // Proceed Button
           if (_routeDistanceMeters != null && _hasSelectedVehicle)
             Padding(
-              padding: const EdgeInsets.only(
-                top: 5,
-                right: 65,
-              ), // Leave space for FloatingActionButton
+              padding: const EdgeInsets.only(top: 5),
               child: Container(
                 width: double.infinity,
                 decoration: BoxDecoration(
@@ -1036,80 +1035,298 @@ class BookViewState extends State<BookView> {
       context: context,
       barrierDismissible: false,
       builder: (BuildContext context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
+        return Dialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          clipBehavior: Clip.antiAlias,
+          child: Container(
+            width: 360,
+            color: Colors.white,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // ── Gradient Header ──────────────────────────────────
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 24),
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [Color(0xFF4C8CFF), Color(0xFF3B6FCC)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                  ),
+                  child: Column(
+                    children: [
+                      // Driver avatar
+                      Container(
+                        width: 76,
+                        height: 76,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white, width: 3),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.2),
+                              blurRadius: 12,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: ClipOval(
+                          child: Image.network(
+                            driver['pic'],
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) => Container(
+                              color: Colors.white24,
+                              child: const Icon(Icons.person, size: 40, color: Colors.white),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      // "Driver Found" badge
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.check_circle_rounded, color: Colors.greenAccent, size: 16),
+                            SizedBox(width: 6),
+                            Text(
+                              'DRIVER FOUND',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w900,
+                                fontSize: 12,
+                                letterSpacing: 1.5,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      // Driver name
+                      Text(
+                        driver['name'],
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w900,
+                          fontSize: 22,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      // Star rating
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.star_rounded, color: Colors.amber, size: 18),
+                          const SizedBox(width: 4),
+                          Text(
+                            '${driver['rating']}  •  Active Now',
+                            style: TextStyle(
+                              color: Colors.white.withValues(alpha: 0.9),
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+
+                // ── Info Body ────────────────────────────────────────
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 20, 24, 8),
+                  child: Column(
+                    children: [
+                      _driverInfoRow(
+                        icon: Icons.directions_car_rounded,
+                        label: 'Vehicle',
+                        value: driver['vehicle'],
+                      ),
+                      const SizedBox(height: 12),
+                      _driverInfoRow(
+                        icon: Icons.pin_outlined,
+                        label: 'Plate No.',
+                        value: driver['plate'],
+                      ),
+                      const SizedBox(height: 12),
+                      _driverInfoRow(
+                        icon: Icons.info_outline_rounded,
+                        label: 'Note',
+                        value: driver['desc'],
+                        italic: true,
+                      ),
+                    ],
+                  ),
+                ),
+
+                // ── Action Buttons ───────────────────────────────────
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
+                  child: Row(
+                    children: [
+                      // Cancel
+                      Expanded(
+                        child: OutlinedButton(
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: Colors.red.shade400,
+                            side: BorderSide(color: Colors.red.shade200),
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          onPressed: () => Navigator.of(context).pop(),
+                          child: const Text(
+                            'CANCEL',
+                            style: TextStyle(fontWeight: FontWeight.w800, letterSpacing: 1),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      // Proceed
+                      Expanded(
+                        flex: 2,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFF4C8CFF), Color(0xFF3B6FCC)],
+                            ),
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFF4C8CFF).withValues(alpha: 0.4),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.transparent,
+                              shadowColor: Colors.transparent,
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            onPressed: () async {
+                              try {
+                                final user = FirebaseAuth.instance.currentUser;
+                                // Fetch the actual username from Firestore (displayName is not set on signup)
+                                String userName = 'Anonymous User';
+                                if (user != null) {
+                                  final userDoc = await FirebaseFirestore.instance
+                                      .collection('users')
+                                      .doc(user.uid)
+                                      .get();
+                                  userName = userDoc.data()?['username'] ?? user.email ?? 'Anonymous User';
+                                }
+                                final double distanceKm = (_routeDistanceMeters ?? 0) / 1000;
+                                final double price = _selectedVehicle == 'Motorcycle'
+                                    ? (15.0 + (distanceKm * 50.0))
+                                    : 80.0;
+
+                                await FirebaseFirestore.instance.collection('receipts').add({
+                                  'orderId': '#TEM-2026-${DateTime.now().millisecondsSinceEpoch.toString().substring(7)}',
+                                  'user': userName,
+                                  'userId': user?.uid,
+                                  'driver': driver['name'],
+                                  'date': FieldValue.serverTimestamp(),
+                                  'amount': price,
+                                  'type': _selectedVehicle,
+                                  'route': '${_fromController.text} to ${_toController.text}',
+                                  'status': 'Completed',
+                                });
+
+                                if (mounted) {
+                                  Navigator.of(context).pop();
+                                  _showVirtualReceipt(driver);
+                                }
+                              } catch (e) {
+                                debugPrint('Error saving receipt: $e');
+                                if (mounted) {
+                                  Navigator.of(context).pop();
+                                  _showVirtualReceipt(driver);
+                                }
+                              }
+                            },
+                            child: const Text(
+                              'PROCEED',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w900,
+                                fontSize: 14,
+                                letterSpacing: 1.2,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
-          title: const Row(
-            children: [
-              Icon(Icons.check_circle, color: Colors.green),
-              SizedBox(width: 10),
-              Text('Driver Found!'),
-            ],
+        );
+      },
+    );
+  }
+
+  /// Helper to build a labeled info row inside the Driver Found dialog.
+  Widget _driverInfoRow({
+    required IconData icon,
+    required String label,
+    required String value,
+    bool italic = false,
+  }) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 36,
+          height: 36,
+          decoration: BoxDecoration(
+            color: const Color(0xFF4C8CFF).withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(10),
           ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
+          child: Icon(icon, size: 18, color: const Color(0xFF4C8CFF)),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                driver['name'],
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18,
+                label,
+                style: TextStyle(
+                  fontSize: 11,
+                  color: Colors.grey.shade500,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.5,
                 ),
               ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  const Icon(Icons.star, color: Colors.orange, size: 20),
-                  Text(' ${driver['rating']} (Active Now)'),
-                ],
-              ),
-              const Divider(height: 24),
-              const Text(
-                'Vehicle:',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-              ),
-              Text(driver['vehicle']),
-              Text('Plate: ${driver['plate']}'),
-              const SizedBox(height: 8),
-              const Text(
-                'Description:',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-              ),
+              const SizedBox(height: 2),
               Text(
-                driver['desc'],
-                style: const TextStyle(fontStyle: FontStyle.italic),
+                value,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.black87,
+                  fontStyle: italic ? FontStyle.italic : FontStyle.normal,
+                ),
               ),
             ],
           ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: Text(
-                'CANCEL',
-                style: TextStyle(color: Colors.red.shade400),
-              ),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF4C8CFF),
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
-              onPressed: () {
-                Navigator.of(context).pop();
-                _showVirtualReceipt(driver);
-              },
-              child: const Text('PROCEED TO RECEIPT'),
-            ),
-          ],
-        );
-      },
+        ),
+      ],
     );
   }
 

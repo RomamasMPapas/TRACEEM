@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'dart:math';
 
 /// Admin page that displays all registered users in a data table streamed from Firestore.
-/// Shows their username, email, region, role, online status, and allows quick order creation.
-/// The [UsersPage] class is responsible for managing its respective UI components and state.
+/// Shows their username, email, region, role, and online status.
 class UsersPage extends StatelessWidget {
   const UsersPage({super.key});
 
@@ -18,7 +16,7 @@ class UsersPage extends StatelessWidget {
             children: [
               const Text(
                 'Registered Users',
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xFF1E3A8A)),
               ),
               const Spacer(),
               ElevatedButton.icon(
@@ -28,6 +26,7 @@ class UsersPage extends StatelessWidget {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF4C8CFF),
                   foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                 ),
               ),
             ],
@@ -52,9 +51,10 @@ class UsersPage extends StatelessWidget {
               return Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24.0),
                 child: Card(
-                  elevation: 2,
+                  elevation: 4,
+                  shadowColor: Colors.black12,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(15),
                   ),
                   child: SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
@@ -64,19 +64,19 @@ class UsersPage extends StatelessWidget {
                       ),
                       child: DataTable(
                         headingRowColor: WidgetStateProperty.all(
-                          Colors.grey[100],
+                          Colors.grey[50],
                         ),
+                        dividerThickness: 1,
+                        horizontalMargin: 24,
                         columns: const [
-                          DataColumn(label: Text('USERNAME')),
-                          DataColumn(label: Text('EMAIL')),
-                          DataColumn(label: Text('REGION')),
-                          DataColumn(label: Text('ROLE')),
-                          DataColumn(label: Text('STATUS')),
-                          DataColumn(label: Text('ACTIONS')),
+                          DataColumn(label: Text('USERNAME', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blueGrey))),
+                          DataColumn(label: Text('EMAIL', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blueGrey))),
+                          DataColumn(label: Text('REGION', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blueGrey))),
+                          DataColumn(label: Text('ROLE', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blueGrey))),
+                          DataColumn(label: Text('STATUS', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blueGrey))),
                         ],
                         rows: users.map((doc) {
                           final data = doc.data() as Map<String, dynamic>;
-                          final userId = doc.id;
                           final role = data['role'] ?? 'user';
                           final isOnline = data['isOnline'] ?? false;
 
@@ -86,32 +86,36 @@ class UsersPage extends StatelessWidget {
                                 Text(
                                   data['username'] ?? 'N/A',
                                   style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.black87,
                                   ),
                                 ),
                               ),
-                              DataCell(Text(data['email'] ?? 'N/A')),
-                              DataCell(Text(data['region'] ?? 'Region 7')),
+                              DataCell(Text(data['email'] ?? 'N/A', style: TextStyle(color: Colors.grey.shade700))),
+                              DataCell(Text(data['region'] ?? 'Region 7', style: TextStyle(color: Colors.grey.shade700))),
                               DataCell(
                                 Container(
                                   padding: const EdgeInsets.symmetric(
-                                    horizontal: 8,
-                                    vertical: 4,
+                                    horizontal: 10,
+                                    vertical: 5,
                                   ),
                                   decoration: BoxDecoration(
                                     color: role == 'admin'
-                                        ? Colors.purple[100]
-                                        : Colors.blue[100],
-                                    borderRadius: BorderRadius.circular(12),
+                                        ? Colors.purple.withValues(alpha: 0.1)
+                                        : Colors.blue.withValues(alpha: 0.1),
+                                    borderRadius: BorderRadius.circular(20),
+                                    border: Border.all(
+                                      color: role == 'admin' ? Colors.purple.shade200 : Colors.blue.shade200,
+                                    ),
                                   ),
                                   child: Text(
                                     role.toString().toUpperCase(),
                                     style: TextStyle(
                                       color: role == 'admin'
-                                          ? Colors.purple[900]
-                                          : Colors.blue[900],
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.bold,
+                                          ? Colors.purple.shade700
+                                          : Colors.blue.shade700,
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w900,
                                     ),
                                   ),
                                 ),
@@ -120,39 +124,28 @@ class UsersPage extends StatelessWidget {
                                 Row(
                                   children: [
                                     Container(
-                                      width: 10,
-                                      height: 10,
+                                      width: 8,
+                                      height: 8,
                                       decoration: BoxDecoration(
                                         color: isOnline
                                             ? Colors.green
-                                            : Colors.grey,
+                                            : Colors.grey.shade400,
                                         shape: BoxShape.circle,
+                                        boxShadow: isOnline ? [
+                                          BoxShadow(color: Colors.green.withValues(alpha: 0.4), blurRadius: 4, spreadRadius: 1)
+                                        ] : null,
                                       ),
                                     ),
                                     const SizedBox(width: 8),
-                                    Text(isOnline ? 'Online' : 'Offline'),
-                                  ],
-                                ),
-                              ),
-                              DataCell(
-                                ElevatedButton.icon(
-                                  onPressed: () =>
-                                      _createQuickOrder(context, userId),
-                                  icon: const Icon(
-                                    Icons.add_shopping_cart,
-                                    size: 14,
-                                  ),
-                                  label: const Text(
-                                    'SEND ORDER',
-                                    style: TextStyle(fontSize: 11),
-                                  ),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.green,
-                                    foregroundColor: Colors.white,
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 12,
+                                    Text(
+                                      isOnline ? 'Online' : 'Offline',
+                                      style: TextStyle(
+                                        color: isOnline ? Colors.green.shade700 : Colors.grey.shade600,
+                                        fontWeight: FontWeight.w500,
+                                        fontSize: 13,
+                                      ),
                                     ),
-                                  ),
+                                  ],
                                 ),
                               ),
                             ],
@@ -166,47 +159,8 @@ class UsersPage extends StatelessWidget {
             },
           ),
         ),
+        const SizedBox(height: 24),
       ],
     );
-  }
-
-  /// Creates a quick test order in Firestore assigned to [userId] starting from IT Park, Cebu.
-  /// Shows a success or error snack bar after the operation.
-  /// Asynchronously executes the logic for _createQuickOrder.
-  Future<void> _createQuickOrder(BuildContext context, String userId) async {
-    final random = Random();
-    final orderNum =
-        'ORD-${random.nextInt(1000000).toString().padLeft(6, '0')}';
-
-    // Default start coords: IT Park, Cebu
-    const startLat = 10.3297;
-    const startLng = 123.9061;
-
-    try {
-      await FirebaseFirestore.instance.collection('orders').add({
-        'userId': userId,
-        'orderNumber': orderNum,
-        'status': 'Preparing',
-        'progress': 0.1,
-        'date': FieldValue.serverTimestamp(),
-        'region': 'Region 7',
-        'driverLocation': [startLat, startLng],
-      });
-
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Test Order $orderNum sent to User!'),
-            backgroundColor: Colors.green,
-          ),
-        );
-      }
-    } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
-        );
-      }
-    }
   }
 }

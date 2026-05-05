@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
 
 /// A premium dialog for users to rate their ride experience.
 /// Includes driver info, star rating selection, and a comment section.
@@ -226,14 +229,50 @@ class _RatingDialogState extends State<RatingDialog> {
                       ),
                       onPressed: _rating == 0
                           ? null
-                          : () {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Submission Successful! Thank you.'),
-                                  backgroundColor: Colors.green,
-                                ),
-                              );
-                              Navigator.pop(context);
+                          : () async {
+                              try {
+                                final user = FirebaseAuth.instance.currentUser;
+                                // Fetch the actual username from Firestore (displayName is not set on signup)
+                                String userName = 'Anonymous User';
+                                if (user != null) {
+                                  final userDoc = await FirebaseFirestore.instance
+                                      .collection('users')
+                                      .doc(user.uid)
+                                      .get();
+                                  userName = userDoc.data()?['username'] ?? user.email ?? 'Anonymous User';
+                                }
+                                
+                                await FirebaseFirestore.instance.collection('ratings').add({
+                                  'driver': widget.driverName,
+                                  'user': userName,
+                                  'rating': _rating,
+                                  'comment': _commentController.text,
+                                  'vehicle': widget.vehicleInfo,
+                                  'type': widget.vehicleInfo.toLowerCase().contains('taxi') ? 'Taxi' : 'Motorcycle',
+                                  'timestamp': FieldValue.serverTimestamp(),
+                                  'blocked': _blockDriver,
+                                  'userId': user?.uid,
+                                });
+
+                                if (mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Rating Submitted! Thank you.'),
+                                      backgroundColor: Colors.green,
+                                    ),
+                                  );
+                                  Navigator.pop(context);
+                                }
+                              } catch (e) {
+                                if (mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text('Error: ${e.toString()}'),
+                                      backgroundColor: Colors.red,
+                                    ),
+                                  );
+                                }
+                              }
                             },
                       child: const Text(
                         "SUBMIT RATING",

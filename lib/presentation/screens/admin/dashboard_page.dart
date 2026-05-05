@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:intl/intl.dart';
 
 /// The [DashboardPage] provides the administrator with a high-level overview
 /// of system metrics and analytics. It includes interactive charts such as
@@ -16,7 +18,8 @@ class _DashboardPageState extends State<DashboardPage> {
   String _selectedType = 'All';
 
   // Mock data for drivers with types
-  final List<Map<String, dynamic>> _driverRatings = [
+  // Mock data for drivers with types
+  final List<Map<String, dynamic>> _mockDriverRatings = [
     {'name': 'Lito Fast', 'rating': 4.8, 'type': 'Motorcycle'},
     {'name': 'Maria Rider', 'rating': 4.9, 'type': 'Motorcycle'},
     {'name': 'Jun Moto', 'rating': 2.5, 'type': 'Motorcycle'},
@@ -29,24 +32,6 @@ class _DashboardPageState extends State<DashboardPage> {
     {'name': 'Tony Wheels', 'rating': 4.0, 'type': 'Taxi'},
   ];
 
-  // Mock revenue/profit data (Monthly)
-  final List<FlSpot> _motorcycleProfit = [
-    const FlSpot(0, 12000),
-    const FlSpot(1, 15000),
-    const FlSpot(2, 11000),
-    const FlSpot(3, 18000),
-    const FlSpot(4, 22000),
-    const FlSpot(5, 25000),
-  ];
-
-  final List<FlSpot> _taxiProfit = [
-    const FlSpot(0, 35000),
-    const FlSpot(1, 32000),
-    const FlSpot(2, 40000),
-    const FlSpot(3, 38000),
-    const FlSpot(4, 45000),
-    const FlSpot(5, 48000),
-  ];
 
   int _touchedBarIndex = -1;
   int _touchedPieIndex = -1;
@@ -54,85 +39,152 @@ class _DashboardPageState extends State<DashboardPage> {
 
   @override
   Widget build(BuildContext context) {
-    // Filter ratings based on selected type
-    final filteredDrivers = _driverRatings.where((d) => 
-      _selectedType == 'All' || d['type'] == _selectedType
-    ).toList();
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance.collection('ratings').snapshots(),
+      builder: (context, ratingsSnapshot) {
+        return StreamBuilder<QuerySnapshot>(
+          stream: FirebaseFirestore.instance.collection('receipts').snapshots(),
+          builder: (context, receiptsSnapshot) {
+            if (ratingsSnapshot.hasError || receiptsSnapshot.hasError) {
+              return const Center(child: Text('Something went wrong'));
+            }
+            
+            if (ratingsSnapshot.connectionState == ConnectionState.waiting ||
+                receiptsSnapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
 
-    // Calculate satisfaction for filtered data
-    final int satisfiedCount = filteredDrivers.where((d) => d['rating'] >= 4).length;
-    final int neutralCount = filteredDrivers.where((d) => d['rating'] >= 3 && d['rating'] < 4).length;
-    final int dissatisfiedCount = filteredDrivers.where((d) => d['rating'] < 3).length;
+            // --- PROCESS RATINGS ---
+            final allRatings = [..._mockDriverRatings]; // Include mock for fuller chart
+            for (var doc in ratingsSnapshot.data!.docs) {
+              final data = doc.data() as Map<String, dynamic>;
+              allRatings.add({
+                'name': data['driver'] ?? 'Unknown',
+                'rating': (data['rating'] as num?)?.toDouble() ?? 0.0,
+                'type': data['type'] ?? 'Motorcycle',
+              });
+            }
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(24.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Admin Dashboard Analytics',
-            style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Color(0xFF1E3A8A)),
-          ),
-          const SizedBox(height: 20),
+            final filteredDrivers = allRatings.where((d) => 
+              _selectedType == 'All' || d['type'] == _selectedType
+            ).toList();
 
-          // Vehicle Type Tabs
-          Container(
-            margin: const EdgeInsets.only(bottom: 24),
-            decoration: BoxDecoration(
-              color: Colors.grey.shade200,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Row(
-              children: ['All', 'Motorcycle', 'Taxi'].map((type) {
-                final isSelected = _selectedType == type;
-                return Expanded(
-                  child: GestureDetector(
-                    onTap: () => setState(() => _selectedType = type),
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      decoration: BoxDecoration(
-                        color: isSelected ? const Color(0xFF4C8CFF) : Colors.transparent,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Center(
-                        child: Text(
-                          type,
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: isSelected ? Colors.white : Colors.grey.shade700,
+            // Group by driver to get average
+            Map<String, List<double>> grouped = {};
+            for (var d in filteredDrivers) {
+              grouped.putIfAbsent(d['name'], () => []).add(d['rating']);
+            }
+            
+            List<Map<String, dynamic>> driverAverages = grouped.entries.map((e) {
+              double avg = e.value.reduce((a, b) => a + b) / e.value.length;
+              return {
+                'name': e.key,
+                'rating': avg,
+                'type': filteredDrivers.firstWhere((d) => d['name'] == e.key)['type'],
+              };
+            }).toList();
+
+            // Calculate satisfaction
+            final int satisfiedCount = driverAverages.where((d) => d['rating'] >= 4).length;
+            final int neutralCount = driverAverages.where((d) => d['rating'] >= 3 && d['rating'] < 4).length;
+            final int dissatisfiedCount = driverAverages.where((d) => d['rating'] < 3).length;
+
+            // --- PROCESS PROFITS ---
+            double totalProfit = 0;
+            Map<int, double> motoMonthly = {0: 12000, 1: 15000, 2: 11000, 3: 18000, 4: 22000, 5: 25000};
+            Map<int, double> taxiMonthly = {0: 35000, 1: 32000, 2: 40000, 3: 38000, 4: 45000, 5: 48000};
+
+            for (var doc in receiptsSnapshot.data!.docs) {
+              final data = doc.data() as Map<String, dynamic>;
+              final amount = (data['amount'] as num?)?.toDouble() ?? 0.0;
+              final date = (data['date'] as Timestamp?)?.toDate() ?? DateTime.now();
+              final type = data['type'] ?? 'Motorcycle';
+              
+              totalProfit += amount;
+              
+              // Only add to June (index 5) for demo purposes of new data
+              if (date.month == 5) { // May (index 4) or 6 for June
+                 if (type == 'Motorcycle') motoMonthly[5] = (motoMonthly[5] ?? 0) + amount;
+                 else taxiMonthly[5] = (taxiMonthly[5] ?? 0) + amount;
+              }
+            }
+
+            final List<FlSpot> motoSpots = motoMonthly.entries.map((e) => FlSpot(e.key.toDouble(), e.value)).toList();
+            final List<FlSpot> taxiSpots = taxiMonthly.entries.map((e) => FlSpot(e.key.toDouble(), e.value)).toList();
+
+            return SingleChildScrollView(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Admin Dashboard Analytics',
+                    style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Color(0xFF1E3A8A)),
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Vehicle Type Tabs
+                  Container(
+                    margin: const EdgeInsets.only(bottom: 24),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade200,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      children: ['All', 'Motorcycle', 'Taxi'].map((type) {
+                        final isSelected = _selectedType == type;
+                        return Expanded(
+                          child: GestureDetector(
+                            onTap: () => setState(() => _selectedType = type),
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 200),
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              decoration: BoxDecoration(
+                                color: isSelected ? const Color(0xFF4C8CFF) : Colors.transparent,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Center(
+                                child: Text(
+                                  type,
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: isSelected ? Colors.white : Colors.grey.shade700,
+                                  ),
+                                ),
+                              ),
+                            ),
                           ),
-                        ),
-                      ),
+                        );
+                      }).toList(),
                     ),
                   ),
-                );
-              }).toList(),
-            ),
-          ),
 
-          // First Row: Ratings & Satisfaction
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                flex: 2,
-                child: _buildRatingsCard(filteredDrivers),
+                  // First Row: Ratings & Satisfaction
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        flex: 2,
+                        child: _buildRatingsCard(driverAverages),
+                      ),
+                      const SizedBox(width: 24),
+                      Expanded(
+                        flex: 1,
+                        child: _buildSatisfactionCard(satisfiedCount, neutralCount, dissatisfiedCount),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // Second Row: Profit Chart
+                  _buildProfitCard(motoSpots, taxiSpots, totalProfit + 73000), // Base mock + real
+                ],
               ),
-              const SizedBox(width: 24),
-              Expanded(
-                flex: 1,
-                child: _buildSatisfactionCard(satisfiedCount, neutralCount, dissatisfiedCount),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 24),
-
-          // Second Row: Profit Chart
-          _buildProfitCard(),
-        ],
-      ),
+            );
+          },
+        );
+      },
     );
   }
 
@@ -281,7 +333,7 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
-  Widget _buildProfitCard() {
+  Widget _buildProfitCard(List<FlSpot> motoSpots, List<FlSpot> taxiSpots, double total) {
     return Card(
       elevation: 4,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
@@ -300,7 +352,7 @@ class _DashboardPageState extends State<DashboardPage> {
                     Text('Net revenue after platform fees', style: TextStyle(color: Colors.grey)),
                   ],
                 ),
-                Text('Total: ₱73,000', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: Colors.green.shade700)),
+                Text('Total: ₱${NumberFormat('#,###').format(total)}', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: Colors.green.shade700)),
               ],
             ),
             const SizedBox(height: 30),
@@ -342,7 +394,7 @@ class _DashboardPageState extends State<DashboardPage> {
                   borderData: FlBorderData(show: false),
                   lineBarsData: [
                     LineChartBarData(
-                      spots: _motorcycleProfit,
+                      spots: motoSpots,
                       isCurved: true,
                       color: const Color(0xFF4C8CFF),
                       barWidth: 4,
@@ -354,7 +406,7 @@ class _DashboardPageState extends State<DashboardPage> {
                       ),
                     ),
                     LineChartBarData(
-                      spots: _taxiProfit,
+                      spots: taxiSpots,
                       isCurved: true,
                       color: Colors.green,
                       barWidth: 4,

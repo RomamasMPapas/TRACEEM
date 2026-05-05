@@ -23,6 +23,9 @@
 🔵 ***analysis_options.yaml***
 🟢 ---Configuration file for the Dart analyzer, defining linting rules and code formatting strictness.---
 
+🔵 ***backend.bat***
+🟢 ---A Windows batch script that activates the Python virtual environment and launches the FastAPI backend server with a single double-click.---
+
 🔵 ***cloneapp.iml***
 🟢 ---IntelliJ IDEA/Android Studio module file containing IDE-specific project configuration.---
 
@@ -37,6 +40,13 @@
 
 🔵 ***pubspec.yaml***
 🟢 ---The primary project configuration file defining app metadata, Dart packages, dependencies, and asset paths.---
+
+🔴 <<<backend>>>
+🔵 ***backend/main.py***
+🟢 ---The FastAPI Python backend server entry point. Exposes REST endpoints for real-time location tracking (/track), per-user history (/history/{user_id}), and region-filtered history (/history/{region}/{user_id}). Uses an in-memory store for demonstration and runs via Uvicorn on port 8000.---
+
+🔵 ***backend/requirements.txt***
+🟢 ---Lists the Python package dependencies (e.g. FastAPI, Uvicorn) required to run the backend server.---
 
 🔴 <<<lib>>>
 🔵 ***lib/main.dart***
@@ -157,7 +167,7 @@
 🟢 ---Admin interface for managing, viewing, and moderating registered customers.---
 
 🔵 ***lib/presentation/screens/admin/drivers_page.dart***
----Admin interface for managing, approving, and monitoring registered drivers.---
+🟢 ---Admin interface for managing, approving, and monitoring registered drivers.---
 
 🔵 ***lib/presentation/screens/admin/orders_management_page.dart***
 🟢 ---Admin interface for overseeing all active and past orders in the entire system.---

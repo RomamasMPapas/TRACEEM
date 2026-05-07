@@ -71,8 +71,6 @@ class BookViewState extends State<BookView> {
   /// Holds the data dictionary of the driver currently assigned to the user.
   Map<String, dynamic>? _currentDriver;
   
-  /// Controls the visibility of the "Recent Rides" history block in the search menu.
-  bool _showHistory = true;
   
   /// Tracks if the user has explicitly selected a vehicle, which allows confirming the booking.
   bool _hasSelectedVehicle = false;
@@ -136,7 +134,6 @@ class BookViewState extends State<BookView> {
       _routeDistanceMeters = null;
       _fromController.clear();
       _toController.clear();
-      _showHistory = true; // Ensure history shows again for next booking
       _hasSelectedVehicle = false; // Reset vehicle choice
     });
   }
@@ -155,7 +152,6 @@ class BookViewState extends State<BookView> {
       _fromLatLng = fromCoords;
       _toController.text = toName;
       _toLatLng = toCoords;
-      _showHistory = false;
       _fetchRoute();
     });
   }

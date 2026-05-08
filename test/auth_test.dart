@@ -21,6 +21,45 @@ class MockAuthRepository implements AuthRepository {
   }
 
   @override
+  Future<Either<Failure, UserEntity>> signUp({
+    required String fullName,
+    required String email,
+    required String password,
+    required String phoneNumber,
+    required String address,
+  }) async => throw UnimplementedError();
+
+  @override
+  Future<Either<Failure, UserEntity>> updateProfile({
+    required String id,
+    required String fullName,
+    required String email,
+    required String password,
+    required String phoneNumber,
+    required String address,
+    String? photoUrl,
+  }) async => throw UnimplementedError();
+
+  @override
+  Future<Either<Failure, UserEntity?>> getCurrentUser() async => throw UnimplementedError();
+
+  @override
+  Future<Either<Failure, void>> logout() async => throw UnimplementedError();
+
+  @override
+  Future<Either<Failure, void>> verifyPhoneNumber({
+    required String phoneNumber,
+    required Function(String verificationId) onCodeSent,
+    required Function(Failure failure) onVerificationFailed,
+  }) async => throw UnimplementedError();
+
+  @override
+  Future<Either<Failure, UserEntity>> signInWithOtp({
+    required String verificationId,
+    required String smsCode,
+  }) async => throw UnimplementedError();
+
+  @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 

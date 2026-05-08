@@ -61,8 +61,8 @@ class TrackingService {
       options: DefaultFirebaseOptions.currentPlatform,
     );
 
-    // The interval for updates (10 minutes)
-    const updateInterval = Duration(minutes: 10);
+    // The interval for updates - Reduced for higher fidelity (e.g., 30 seconds)
+    const updateInterval = Duration(seconds: 30);
 
     Timer.periodic(updateInterval, (timer) async {
       try {
@@ -77,10 +77,14 @@ class TrackingService {
           desiredAccuracy: LocationAccuracy.high,
         );
 
-        // 2. Send to Backend from .env
-        final String baseUrl =
-            dotenv.get('BACKEND_URL', fallback: 'http://localhost:8000');
+        // 2. Select URL based on Platform
+        // In background service, we can't easily use kIsWeb, but we can check the environment
+        final String baseUrl = (identical(0, 0.0)) // Heuristic for web in some contexts or check env
+            ? dotenv.get('API_URL_WEB', fallback: 'http://localhost:8000')
+            : dotenv.get('API_URL_ANDROID', fallback: 'http://10.0.2.2:8000');
+        
         final url = Uri.parse('$baseUrl/track');
+
 
         final response = await http.post(
           url,

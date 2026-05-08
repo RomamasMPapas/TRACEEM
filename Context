@@ -1,6 +1,7 @@
 🔴 <<<Root Directory>>>
 🔵 ***.env***
-🟢 ---Contains environment variables and secret keys for the project.---
+🟢 ---Contains environment variables and secret keys, including platform-specific backend URLs (Web vs Android) for seamless hybrid execution.---
+
 
 🔵 ***.flutter-plugins-dependencies***
 🟢 ---Auto-generated file by Flutter tracking plugin dependencies.---
@@ -20,17 +21,25 @@
 🔵 ***ERD.html***
 🟢 ---An interactive Entity Relationship Diagram visualizing the database schema, Firestore collections, and cross-layer relationships.---
 
-🔵 ***SYSTEM_FLOW.html***
+🔵 ***FLOW/SYSTEM_FLOW.html***
 🟢 ---A high-level system flowchart visualizing the overall operational logic and decision branching of the entire TRACE EM ecosystem.---
 
-🔵 ***USER_FLOW.html***
+
+🔵 ***FLOW/SYSTEM_USERS.html***
+🟢 ---A premium interactive visualization documenting the specific roles and capabilities of Registered Customers and System Administrators.---
+
+
+🔵 ***FLOW/USER_FLOW.html***
 🟢 ---A detailed flowchart specifically mapping the end-to-side logic for Riders and Drivers, from authentication to ride completion.---
 
-🔵 ***ADMIN_FLOW.html***
+
+🔵 ***FLOW/ADMIN_FLOW.html***
 🟢 ---A specialized logic flowchart documenting the administrative workflows, including moderation, support resolution, and financial auditing.---
 
-🔵 ***DATABASE_FLOW.html***
+
+🔵 ***FLOW/DATABASE_FLOW.html***
 🟢 ---A technical flowchart visualizing the data lifecycle, synchronization patterns between Firestore, and real-time processing via the FastAPI backend.---
+
 
 🔵 ***add_comments.dart***
 🟢 ---A utility script used to programmatically add comments or documentation to code files.---
@@ -58,7 +67,8 @@
 
 🔴 <<<backend>>>
 🔵 ***backend/main.py***
-🟢 ---The FastAPI Python backend server entry point. Exposes REST endpoints for real-time location tracking (/track), per-user history (/history/{user_id}), and region-filtered history (/history/{region}/{user_id}). Uses an in-memory store for demonstration and runs via Uvicorn on port 8000.---
+🟢 ---The FastAPI Python backend server entry point. Exposes expanded REST endpoints for tracking, history, user complaints, driver ratings, and financial oversight. Features a mathematical Haversine geofencing engine for automated proximity detection.---
+
 
 🔵 ***backend/requirements.txt***
 🟢 ---Lists the Python package dependencies (e.g. FastAPI, Uvicorn) required to run the backend server.---

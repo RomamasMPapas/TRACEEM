@@ -18,10 +18,6 @@
 🔵 ***README.md***
 🟢 ---The main project documentation file containing the overview and setup instructions.---
 
-🔵 ***PRESENTATION.html***
-🟢 ---A high-fidelity interactive slide deck for executive presentations, covering project vision, architecture, and roadmap.---
-
-
 🔵 ***ERD.html***
 🟢 ---An interactive Entity Relationship Diagram visualizing the database schema, Firestore collections, and cross-layer relationships.---
 

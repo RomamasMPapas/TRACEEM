@@ -3,17 +3,17 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>TRACE EM — Project Presentation</title>
+<title>TRACE EM — Executive Presentation</title>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
 <style>
   :root {
     --primary: #6366f1;
     --secondary: #ec4899;
-    --accent: #38bdf8;
-    --bg: #0f172a;
-    --card-bg: rgba(30, 41, 59, 0.7);
+    --bg: #0b0f1a;
+    --card-bg: rgba(30, 41, 59, 0.4);
     --text-main: #f8fafc;
     --text-dim: #94a3b8;
+    --accent: #38bdf8;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -22,285 +22,318 @@
     font-family: 'Outfit', sans-serif;
     background: var(--bg);
     color: var(--text-main);
-    overflow: hidden;
     height: 100vh;
-    width: 100vw;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
   }
 
-  /* ── Background Blobs ── */
-  .blob {
+  /* ── Background Decoration ── */
+  .orb {
     position: fixed;
-    width: 60vw;
-    height: 60vw;
+    width: 600px;
+    height: 600px;
     border-radius: 50%;
     filter: blur(120px);
-    z-index: -1;
+    z-index: 1;
     opacity: 0.15;
     pointer-events: none;
   }
-  .blob-1 { top: -10%; left: -10%; background: var(--primary); }
-  .blob-2 { bottom: -10%; right: -10%; background: var(--secondary); }
+  .orb-1 { top: -200px; right: -200px; background: var(--primary); }
+  .orb-2 { bottom: -200px; left: -200px; background: var(--secondary); }
 
   /* ── Slide Container ── */
-  #presentation {
+  #deck {
+    width: 90vw;
+    height: 80vh;
+    max-width: 1200px;
     position: relative;
-    width: 100%;
-    height: 100%;
-    transition: transform 0.8s cubic-bezier(0.85, 0, 0.15, 1);
+    z-index: 10;
   }
 
   .slide {
     position: absolute;
-    width: 100%;
-    height: 100%;
+    inset: 0;
+    background: var(--card-bg);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 32px;
+    padding: 60px;
     display: flex;
     flex-direction: column;
     justify-content: center;
-    align-items: center;
-    padding: 60px;
     opacity: 0;
-    visibility: hidden;
-    transition: opacity 0.5s ease, transform 0.5s ease;
-    text-align: center;
+    transform: translateX(50px) scale(0.95);
+    transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+    pointer-events: none;
+    box-shadow: 0 40px 100px rgba(0,0,0,0.5);
   }
 
   .slide.active {
     opacity: 1;
-    visibility: visible;
-    transform: scale(1);
+    transform: translateX(0) scale(1);
+    pointer-events: all;
   }
 
-  /* ── Typography & Elements ── */
-  .tag {
-    font-size: 14px;
+  /* ── Typography ── */
+  .slide-num {
+    font-size: 12px;
     font-weight: 800;
-    letter-spacing: 4px;
     color: var(--primary);
+    letter-spacing: 4px;
     text-transform: uppercase;
     margin-bottom: 20px;
   }
   h1 {
-    font-size: 84px;
+    font-size: 64px;
     font-weight: 800;
+    line-height: 1.1;
+    margin-bottom: 24px;
     background: linear-gradient(to right, #fff, var(--text-dim));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-    margin-bottom: 20px;
-    line-height: 1.1;
   }
   h2 {
-    font-size: 48px;
+    font-size: 42px;
     font-weight: 700;
-    margin-bottom: 30px;
+    margin-bottom: 20px;
+    color: var(--text-main);
   }
-  p.lead {
-    font-size: 24px;
+  p {
+    font-size: 20px;
     color: var(--text-dim);
-    max-width: 800px;
     line-height: 1.6;
+    max-width: 800px;
   }
 
-  /* ── Grid/Layouts ── */
+  /* ── List Elements ── */
   .grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 30px;
-    width: 100%;
-    max-width: 1200px;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 32px;
     margin-top: 40px;
   }
-  .feature-card {
-    background: var(--card-bg);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 24px;
-    padding: 30px;
-    text-align: left;
-    transition: transform 0.3s ease;
+  .item {
+    background: rgba(255,255,255,0.03);
+    padding: 24px;
+    border-radius: 16px;
+    border-left: 4px solid var(--primary);
   }
-  .feature-card:hover { transform: translateY(-10px); border-color: var(--primary); }
-  .feature-card h3 { font-size: 20px; margin-bottom: 10px; color: var(--accent); }
-  .feature-card p { font-size: 16px; color: var(--text-dim); line-height: 1.5; }
+  .item h3 { font-size: 18px; margin-bottom: 8px; color: var(--accent); }
+  .item p { font-size: 14px; }
 
-  .stack-item {
-    font-size: 32px;
-    font-weight: 800;
-    color: #fff;
-    padding: 10px 20px;
-    border-radius: 12px;
-    background: rgba(255,255,255,0.05);
-    border: 1px solid rgba(255,255,255,0.1);
+  /* ── Tech Pills ── */
+  .pill-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 30px;
+  }
+  .pill {
+    background: rgba(99, 102, 241, 0.1);
+    border: 1px solid var(--primary);
+    padding: 8px 20px;
+    border-radius: 100px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--primary);
   }
 
-  /* ── Controls ── */
+  /* ── Navigation ── */
   .controls {
     position: fixed;
     bottom: 40px;
-    right: 40px;
+    right: 5vw;
     display: flex;
-    gap: 15px;
+    gap: 16px;
     z-index: 100;
   }
-  .btn {
-    width: 50px;
-    height: 50px;
+  .nav-btn {
+    width: 56px;
+    height: 56px;
     border-radius: 50%;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    background: var(--card-bg);
-    color: #fff;
+    background: var(--primary);
+    border: none;
+    color: white;
+    font-size: 20px;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 20px;
-    transition: all 0.3s ease;
+    box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3);
+    transition: transform 0.2s;
   }
-  .btn:hover { background: var(--primary); transform: scale(1.1); }
+  .nav-btn:hover { transform: scale(1.1); }
+  .nav-btn:active { transform: scale(0.9); }
+  .nav-btn.disabled { opacity: 0.3; pointer-events: none; }
 
-  .progress {
+  .progress-bar {
     position: fixed;
     bottom: 0;
     left: 0;
     height: 4px;
     background: var(--primary);
-    transition: width 0.3s ease;
+    transition: width 0.4s ease;
     z-index: 100;
+  }
+
+  @media (max-width: 768px) {
+    h1 { font-size: 32px; }
+    h2 { font-size: 24px; }
+    .grid { grid-template-columns: 1fr; }
+    .slide { padding: 30px; }
   }
 </style>
 </head>
 <body>
 
-<div class="blob blob-1"></div>
-<div class="blob blob-2"></div>
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
 
-<div id="presentation">
+<div class="progress-bar" id="progress"></div>
+
+<div id="deck">
   <!-- Slide 1: Title -->
   <div class="slide active">
-    <span class="tag">Next-Gen Logistics</span>
+    <div class="slide-num">Slide 01 — Introduction</div>
     <h1>TRACE EM</h1>
-    <p class="lead">Real-time Tracking and Fleet Management Ecosystem. Built for speed, reliability, and precision.</p>
+    <p>Real-Time Tracking, Re-imagined. A high-fidelity logistics management ecosystem built for millisecond-precision across all platforms.</p>
+    <div class="pill-row">
+      <div class="pill">Precision</div>
+      <div class="pill">Scalability</div>
+      <div class="pill">Reliability</div>
+    </div>
   </div>
 
-  <!-- Slide 2: The Core Challenge -->
+  <!-- Slide 2: The Gap -->
   <div class="slide">
-    <span class="tag">The Problem</span>
-    <h2>Visibility is Velocity</h2>
-    <p class="lead">Modern delivery operations fail due to latency, data fragmentation, and lack of real-time operational oversight.</p>
+    <div class="slide-num">Slide 02 — The Challenge</div>
+    <h2>The Connectivity Gap</h2>
+    <p>Most logistics systems suffer from high latency, data silos, and inconsistent experiences between drivers and administrators.</p>
     <div class="grid">
-      <div class="feature-card">
-        <h3>Latency Gaps</h3>
-        <p>Outdated polling systems lead to driver-customer disconnects.</p>
+      <div class="item">
+        <h3>Latency</h3>
+        <p>Outdated polling methods cause "jumps" in tracking data.</p>
       </div>
-      <div class="feature-card">
-        <h3>Siloed Data</h3>
-        <p>Disconnected frontends and backends create operational blind spots.</p>
-      </div>
-      <div class="feature-card">
-        <h3>Complexity</h3>
-        <p>Scaling a tracking app requires enterprise-grade architecture from day one.</p>
+      <div class="item">
+        <h3>Fragmentation</h3>
+        <p>Disparate tools that don't talk to each other correctly.</p>
       </div>
     </div>
   </div>
 
-  <!-- Slide 3: The Power Stack -->
+  <!-- Slide 3: The Solution -->
   <div class="slide">
-    <span class="tag">Our Tech Stack</span>
-    <h2>Built on Excellence</h2>
-    <div class="grid" style="grid-template-columns: repeat(3, 1fr);">
-      <div class="stack-item">FLUTTER</div>
-      <div class="stack-item">FAST API</div>
-      <div class="stack-item">FIREBASE</div>
-      <div class="stack-item">TDD</div>
-      <div class="stack-item">DDD</div>
-      <div class="stack-item">CLEAN ARCH</div>
-    </div>
-    <p class="lead" style="margin-top: 40px;">A hybrid architecture combining high-speed custom Python logic with the real-time reliability of Google Firebase.</p>
-  </div>
-
-  <!-- Slide 4: Key Capabilities -->
-  <div class="slide">
-    <span class="tag">Core Features</span>
-    <h2>Intelligence in Motion</h2>
+    <div class="slide-num">Slide 03 — The Core Solution</div>
+    <h2>High-Fidelity Tracking</h2>
+    <p>A unified ecosystem bridging the gap with a hybrid engine for zero-lag visibility.</p>
     <div class="grid">
-      <div class="feature-card">
-        <h3>Live Map Engine</h3>
-        <p>30-second high-fidelity updates using Flutter Map and Geolocator hardware integration.</p>
+      <div class="item">
+        <h3>Live Map Vis</h3>
+        <p>Interactive maps with millisecond-precision driver movement.</p>
       </div>
-      <div class="feature-card">
-        <h3>Haversine Geofencing</h3>
-        <p>Automated proximity alerts triggered when drivers reach delivery zones.</p>
-      </div>
-      <div class="feature-card">
-        <h3>Full Fleet Control</h3>
-        <p>Admin dashboards for real-time conflict resolution and financial oversight.</p>
+      <div class="item">
+        <h3>Auto-Geofencing</h3>
+        <p>Automated status triggers based on mathematical proximity checks.</p>
       </div>
     </div>
   </div>
 
-  <!-- Slide 5: System Users -->
+  <!-- Slide 4: The Power Stack -->
   <div class="slide">
-    <span class="tag">Roles & Permissions</span>
-    <h2>Unified Ecosystem</h2>
+    <div class="slide-num">Slide 04 — Technical Architecture</div>
+    <h2>The Power Stack</h2>
+    <p>Built with enterprise standards for maximum performance and future-proof scaling.</p>
+    <div class="pill-row">
+      <div class="pill">Flutter</div>
+      <div class="pill">FastAPI (Python)</div>
+      <div class="pill">Firebase</div>
+      <div class="pill">DDD</div>
+      <div class="pill">TDD</div>
+      <div class="pill">Clean Architecture</div>
+    </div>
+    <div class="grid" style="margin-top:20px;">
+      <div class="item">
+        <h3>Frontend Consistency</h3>
+        <p>Single codebase for Web, Android, iOS, and Windows.</p>
+      </div>
+      <div class="item">
+        <h3>Backend Speed</h3>
+        <p>Asynchronous Python engine for handling high-volume tracking.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Slide 5: System Roles -->
+  <div class="slide">
+    <div class="slide-num">Slide 05 — Role Breakdown</div>
+    <h2>Roles & Capabilities</h2>
+    <p>Tailored experiences for every system participant in the ecosystem.</p>
     <div class="grid">
-      <div class="feature-card">
+      <div class="item">
         <h3>Registered Customer</h3>
-        <p>Place orders, track live drivers, provide feedback, and manage profile settings.</p>
+        <p>Order life-cycle, live tracking, and engagement feedback.</p>
       </div>
-      <div class="feature-card">
+      <div class="item">
         <h3>System Administrator</h3>
-        <p>Verify credentials, moderate fleet, audit transactions, and resolve disputes.</p>
+        <p>Fleet moderation, dashboard analytics, and financial oversight.</p>
       </div>
     </div>
   </div>
 
-  <!-- Slide 6: Conclusion -->
+  <!-- Slide 6: Future -->
   <div class="slide">
-    <span class="tag">Conclusion</span>
-    <h1>Ready for Scale</h1>
-    <p class="lead">TRACE EM is more than an app—it's a scalable foundation for the future of logistics.</p>
-    <div style="margin-top: 40px; font-weight: 800; font-size: 18px; color: var(--accent);">
-      QUESTIONS?
+    <div class="slide-num">Slide 06 — Roadmap</div>
+    <h2>The Path to Production</h2>
+    <p>Moving from a high-fidelity prototype to a world-class logistics product.</p>
+    <div class="grid">
+      <div class="item">
+        <h3>Cloud Scale</h3>
+        <p>Dockerization and Cloud deployment (AWS/GCP).</p>
+      </div>
+      <div class="item">
+        <h3>AI Insights</h3>
+        <p>Predictive delivery ETAs and automated conflict resolution.</p>
+      </div>
     </div>
   </div>
 </div>
 
 <div class="controls">
-  <button class="btn" onclick="prevSlide()">←</button>
-  <button class="btn" onclick="nextSlide()">→</button>
+  <button class="nav-btn" id="prevBtn" onclick="move(-1)">←</button>
+  <button class="nav-btn" id="nextBtn" onclick="move(1)">→</button>
 </div>
 
-<div class="progress" id="progress"></div>
-
 <script>
-  let currentSlide = 0;
+  let current = 0;
   const slides = document.querySelectorAll('.slide');
   const progress = document.getElementById('progress');
+  const prevBtn = document.getElementById('prevBtn');
+  const nextBtn = document.getElementById('nextBtn');
 
-  function updateSlide() {
+  function move(dir) {
+    current = Math.max(0, Math.min(slides.length - 1, current + dir));
+    update();
+  }
+
+  function update() {
     slides.forEach((s, i) => {
-      s.classList.toggle('active', i === currentSlide);
+      s.classList.toggle('active', i === current);
     });
-    progress.style.width = ((currentSlide + 1) / slides.length) * 100 + '%';
+    progress.style.width = ((current + 1) / slides.length) * 100 + '%';
+    
+    prevBtn.classList.toggle('disabled', current === 0);
+    nextBtn.classList.toggle('disabled', current === slides.length - 1);
   }
 
-  function nextSlide() {
-    if (currentSlide < slides.length - 1) {
-      currentSlide++;
-      updateSlide();
-    }
-  }
-
-  function prevSlide() {
-    if (currentSlide > 0) {
-      currentSlide--;
-      updateSlide();
-    }
-  }
-
+  // Keyboard support
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'ArrowRight') nextSlide();
-    if (e.key === 'ArrowLeft') prevSlide();
+    if (e.key === 'ArrowRight' || e.key === ' ') move(1);
+    if (e.key === 'ArrowLeft') move(-1);
   });
+
+  update();
 </script>
 
 </body>

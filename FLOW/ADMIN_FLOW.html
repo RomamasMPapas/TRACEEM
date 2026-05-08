@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>TRACE EM — Admin Logic Flow</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Inter', sans-serif; background: #fdf2ff; overflow: hidden; color: #334155; }
+  #topbar { position: fixed; top: 0; left: 0; right: 0; height: 54px; background: #fff; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; padding: 0 24px; z-index: 1000; }
+  #topbar .logo { font-size: 14px; font-weight: 800; color: #7c3aed; letter-spacing: 2px; }
+  #topbar .badge { margin-left: auto; font-size: 11px; background: #7c3aed; color: #fff; border-radius: 20px; padding: 4px 12px; font-weight: 600; }
+  #canvas-wrap { position: fixed; top: 54px; left: 0; right: 0; bottom: 0; overflow: hidden; cursor: grab; }
+  #canvas { position: absolute; width: 4000px; height: 4000px; background-image: radial-gradient(#f0d3f7 1px, transparent 1px); background-size: 30px 30px; }
+  #svg-layer { position: absolute; top: 0; left: 0; width: 4000px; height: 4000px; pointer-events: none; }
+  .shape { position: absolute; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 11px; font-weight: 700; padding: 10px; cursor: move; z-index: 10; background: #fff; min-width: 140px; min-height: 50px; text-transform: uppercase; }
+  .terminator { border: 2px solid #14b8a6; border-radius: 40px; color: #0f766e; }
+  .process { border: 2px solid #7c3aed; border-radius: 4px; color: #5b21b6; }
+  .decision { width: 110px; height: 110px; border: 2px solid #a855f7; transform: rotate(45deg); }
+  .decision span { transform: rotate(-45deg); width: 100%; }
+  .data { border: 2px solid #d946ef; transform: skewX(-20deg); color: #a21caf; }
+  .data span { transform: skewX(20deg); }
+  .database { border: 2px solid #f97316; border-radius: 10px / 20px; color: #c2410c; min-height: 60px; }
+</style>
+</head>
+<body>
+<div id="topbar"><span class="logo">TRACE EM</span><span class="badge">ADMIN / MODERATION FLOW</span></div>
+<div id="canvas-wrap"><div id="canvas"><svg id="svg-layer"></svg></div></div>
+<script>
+const shapes = [
+  { id: 'a1', type: 'terminator', text: 'ADMIN LOGIN', x: 450, y: 50 },
+  { id: 'a2', type: 'process',    text: 'LOAD DASHBOARD METRICS', x: 450, y: 150 },
+  { id: 'a3', type: 'decision',   text: 'ACTION TYPE?', x: 455, y: 250 },
+  
+  // Branch 1: User Management
+  { id: 'a4', type: 'process',    text: 'FETCH USER LIST', x: 200, y: 280 },
+  { id: 'a5', type: 'decision',   text: 'VIOLATION?', x: 205, y: 380 },
+  { id: 'a6', type: 'process',    text: 'BAN / SUSPEND USER', x: 100, y: 500 },
+  
+  // Branch 2: Complaints
+  { id: 'a7', type: 'process',    text: 'REVIEW COMPLAINTS', x: 450, y: 400 },
+  { id: 'a8', type: 'data',       text: 'INPUT RESOLUTION', x: 450, y: 500 },
+  { id: 'a9', type: 'process',    text: 'NOTIFY USER', x: 450, y: 600 },
+  
+  // Branch 3: Financials
+  { id: 'a10',type: 'process',    text: 'AUDIT RECEIPTS', x: 700, y: 280 },
+  { id: 'a11',type: 'data',       text: 'EXPORT CSV REPORT', x: 850, y: 380 },
+  
+  // DB Sync
+  { id: 'a12',type: 'database',   text: 'FIRESTORE SYNC', x: 450, y: 750 },
+  { id: 'a13',type: 'terminator', text: 'LOGOUT', x: 450, y: 880 }
+];
+const flows = [
+  ['a1', 'a2'], ['a2', 'a3'],
+  ['a3', 'a4', 'USER MGMT'], ['a4', 'a5'], ['a5', 'a6', 'YES'], ['a6', 'a12'],
+  ['a3', 'a7', 'SUPPORT'], ['a7', 'a8'], ['a8', 'a9'], ['a9', 'a12'],
+  ['a3', 'a10', 'FINANCE'], ['a10', 'a11'], ['a11', 'a13'],
+  ['a12', 'a13']
+];
+const canvas = document.getElementById('canvas'); const svg = document.getElementById('svg-layer'); const domShapes = {};
+shapes.forEach(s => {
+  const el = document.createElement('div'); el.className = `shape ${s.type}`; el.id = 'a-' + s.id;
+  el.style.left = s.x + 'px'; el.style.top = s.y + 'px'; el.innerHTML = `<span>${s.text}</span>`;
+  canvas.appendChild(el); domShapes[s.id] = el; makeDraggable(el);
+});
+function getAnchor(id, side) {
+  const el = domShapes[id]; const x = parseFloat(el.style.left); const y = parseFloat(el.style.top);
+  const w = el.offsetWidth; const h = el.offsetHeight;
+  if (side === 'top') return { x: x + w/2, y: y }; if (side === 'bottom') return { x: x + w/2, y: y + h };
+  if (side === 'left') return { x: x, y: y + h/2 }; if (side === 'right') return { x: x + w, y: y + h/2 };
+}
+function drawFlows() {
+  svg.innerHTML = '<defs><marker id="arrow" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#94a3b8"/></marker></defs>';
+  flows.forEach(([fId, tId, label]) => {
+    const fX = parseFloat(domShapes[fId].style.left); const tX = parseFloat(domShapes[tId].style.left);
+    const fY = parseFloat(domShapes[fId].style.top); const tY = parseFloat(domShapes[tId].style.top);
+    let p1 = getAnchor(fId, fY < tY ? 'bottom' : 'top'); let p2 = getAnchor(tId, fY < tY ? 'top' : 'bottom');
+    if (Math.abs(fX - tX) > 100) { p1 = getAnchor(fId, fX < tX ? 'right' : 'left'); p2 = getAnchor(tId, fX < tX ? 'left' : 'right'); }
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    const midY = (p1.y + p2.y) / 2;
+    path.setAttribute('d', `M${p1.x},${p1.y} L${p1.x},${midY} L${p2.x},${midY} L${p2.x},${p2.y}`);
+    path.setAttribute('fill', 'none'); path.setAttribute('stroke', '#cbd5e1'); path.setAttribute('stroke-width', '2'); path.setAttribute('marker-end', 'url(#arrow)');
+    svg.appendChild(path);
+    if (label) { const txt = document.createElementNS('http://www.w3.org/2000/svg', 'text'); txt.setAttribute('x', (p1.x + p2.x)/2 + 5); txt.setAttribute('y', midY - 5); txt.setAttribute('font-size', '10'); txt.setAttribute('font-weight', '700'); txt.setAttribute('fill', '#64748b'); txt.textContent = label; svg.appendChild(txt); }
+  });
+}
+function makeDraggable(el) {
+  let sx, sy, ox, oy, dragging = false;
+  el.addEventListener('mousedown', e => {
+    if (e.button !== 0) return; dragging = true; sx = e.clientX; sy = e.clientY;
+    ox = parseFloat(el.style.left); oy = parseFloat(el.style.top);
+    const onMove = ev => { if (!dragging) return; el.style.left = (ox + (ev.clientX - sx)) + 'px'; el.style.top = (oy + (ev.clientY - sy)) + 'px'; drawFlows(); };
+    const onUp = () => { dragging = false; document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onUp); };
+    document.addEventListener('mousemove', onMove); document.addEventListener('mouseup', onUp);
+  });
+}
+drawFlows();
+</script>
+</body>
+</html>

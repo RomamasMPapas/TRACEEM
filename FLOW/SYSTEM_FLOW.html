@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>TRACE EM — System Flowchart</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+    background: #fdfdfd;
+    overflow: hidden;
+    user-select: none;
+    color: #334155;
+  }
+
+  /* ── Top Bar ── */
+  #topbar {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 54px;
+    background: #ffffff;
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    align-items: center;
+    padding: 0 24px;
+    gap: 16px;
+    z-index: 1000;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  }
+  #topbar .logo {
+    font-size: 14px;
+    font-weight: 800;
+    color: #0f172a;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+  #topbar .sep { width: 1px; height: 24px; background: #e2e8f0; }
+  #topbar .hint { font-size: 12px; color: #64748b; }
+  #topbar .badge {
+    margin-left: auto;
+    font-size: 11px;
+    color: #334155;
+    background: #f1f5f9;
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-weight: 600;
+  }
+
+  /* ── Canvas ── */
+  #canvas-wrap {
+    position: fixed;
+    top: 54px; left: 0; right: 0; bottom: 0;
+    overflow: hidden;
+    cursor: grab;
+    background: #f8fafc;
+  }
+  #canvas-wrap.panning { cursor: grabbing; }
+
+  #canvas {
+    position: absolute;
+    width: 6000px;
+    height: 5000px;
+    background-image:
+      linear-gradient(to right, #e2e8f0 1px, transparent 1px),
+      linear-gradient(to bottom, #e2e8f0 1px, transparent 1px);
+    background-size: 40px 40px;
+    background-color: #f8fafc;
+  }
+
+  /* ── SVG Layer ── */
+  #svg-layer {
+    position: absolute;
+    top: 0; left: 0;
+    width: 6000px;
+    height: 5000px;
+    pointer-events: none;
+  }
+
+  /* ── Flowchart Shapes ── */
+  .shape {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 10px;
+    cursor: move;
+    z-index: 10;
+    transition: filter 0.2s, transform 0.1s;
+    background: #fff;
+    min-width: 130px;
+    min-height: 50px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .shape:hover { filter: brightness(0.98); z-index: 20; }
+  .shape.active { z-index: 30; filter: drop-shadow(0 0 8px rgba(0,0,0,0.1)); }
+
+  /* Terminator: Rounded Oval */
+  .terminator {
+    border: 2px solid #14b8a6;
+    border-radius: 40px;
+    color: #0f766e;
+    min-width: 110px;
+    min-height: 45px;
+  }
+
+  /* Process: Rectangle */
+  .process {
+    border: 2px solid #ef4444;
+    border-radius: 4px;
+    color: #b91c1c;
+  }
+
+  /* Decision: Diamond */
+  .decision {
+    width: 110px;
+    height: 110px;
+    border: 2px solid #3b82f6;
+    background: #fff;
+    transform: rotate(45deg);
+    position: absolute;
+  }
+  .decision span {
+    transform: rotate(-45deg);
+    display: block;
+    width: 100%;
+    line-height: 1.2;
+  }
+
+  /* Data: Parallelogram */
+  .data {
+    border: 2px solid #d946ef;
+    transform: skewX(-20deg);
+    color: #a21caf;
+  }
+  .data span { transform: skewX(20deg); display: block; }
+
+  /* Database: Cylinder */
+  .database {
+    border: 2px solid #f97316;
+    border-radius: 12px / 24px;
+    color: #c2410c;
+    min-height: 70px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  .database::before {
+    content: "";
+    position: absolute;
+    top: 0; left: -2px; right: -2px;
+    height: 12px;
+    border: 2px solid #f97316;
+    border-radius: 100%;
+    background: #fff;
+  }
+
+  /* ── Legend ── */
+  #legend-panel {
+    position: fixed;
+    top: 50%;
+    left: 24px;
+    transform: translateY(-50%);
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 20px;
+    z-index: 500;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+    width: 200px;
+  }
+  #legend-panel h4 { font-size: 15px; margin-bottom: 16px; color: #1e293b; font-weight: 800; border-bottom: 1px solid #f1f5f9; padding-bottom: 10px; }
+  .leg-item { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; font-size: 12px; color: #64748b; font-weight: 600; }
+  .leg-icon { width: 40px; height: 24px; border: 2px solid #ccc; flex-shrink: 0; }
+  .leg-icon.term { border-radius: 15px; border-color: #14b8a6; }
+  .leg-icon.proc { border-color: #ef4444; }
+  .leg-icon.dec  { transform: rotate(45deg); width: 20px; height: 20px; border-color: #3b82f6; margin-left: 10px; margin-right: 10px; }
+  .leg-icon.dat  { transform: skewX(-20deg); border-color: #d946ef; }
+  .leg-icon.db   { border-radius: 100% / 10px; border-color: #f97316; }
+
+  /* ── Controls ── */
+  #controls {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    display: flex;
+    gap: 8px;
+    z-index: 500;
+  }
+  .ctrl-btn {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    color: #475569;
+    border-radius: 8px;
+    padding: 10px 18px;
+    font-size: 13px;
+    cursor: pointer;
+    font-weight: 700;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+  }
+  .ctrl-btn:hover { background: #f8fafc; border-color: #3b82f6; color: #3b82f6; }
+</style>
+</head>
+<body>
+
+<div id="topbar">
+  <span class="logo">TRACE EM</span>
+  <div class="sep"></div>
+  <span class="hint">System Flowchart — Operational logic and decision branching</span>
+  <span class="badge">Professional Flow · Interactive</span>
+</div>
+
+<div id="legend-panel">
+  <h4>Flowchart shapes</h4>
+  <div class="leg-item"><div class="leg-icon term"></div> <div><strong>Terminator</strong><br>Start and end points</div></div>
+  <div class="leg-item"><div class="leg-icon proc"></div> <div><strong>Process</strong><br>An action or function</div></div>
+  <div class="leg-item"><div class="leg-icon dec"></div>  <div><strong>Decision</strong><br>A question to be answered</div></div>
+  <div class="leg-item"><div class="leg-icon dat"></div>  <div><strong>Data</strong><br>I/O or input data</div></div>
+  <div class="leg-item"><div class="leg-icon db"></div>   <div><strong>Database</strong><br>Storage layer</div></div>
+</div>
+
+<div id="canvas-wrap">
+  <div id="canvas">
+    <svg id="svg-layer"></svg>
+    <!-- Shapes Injected by JS -->
+  </div>
+</div>
+
+<div id="controls">
+  <button class="ctrl-btn" onclick="resetView()">⌂ Reset</button>
+  <button class="ctrl-btn" onclick="zoomIn()">＋</button>
+  <button class="ctrl-btn" onclick="zoomOut()">－</button>
+</div>
+
+<script>
+// ─────────────────────────────────────────────
+// DATA MODEL (Logic Flow)
+// ─────────────────────────────────────────────
+const shapes = [
+  // Authentication Flow
+  { id: 'start',  type: 'terminator', text: 'START', x: 450, y: 50 },
+  { id: 'has_acc', type: 'decision',   text: 'ACCOUNT?', x: 455, y: 150 },
+  { id: 'login',  type: 'process',    text: 'LOG IN', x: 300, y: 180 },
+  { id: 'reg',    type: 'process',    text: 'REGISTER', x: 600, y: 180 },
+  { id: 'db_user', type: 'database',   text: 'USER DATABASE', x: 450, y: 350 },
+  
+  // App Entry
+  { id: 'home',   type: 'process',    text: 'HOME SCREEN', x: 450, y: 480 },
+  
+  // Rider Core Flow
+  { id: 'dest',   type: 'data',       text: 'INPUT DESTINATION', x: 250, y: 580 },
+  { id: 'route',  type: 'process',    text: 'CALCULATE ROUTE', x: 250, y: 680 },
+  { id: 'book',   type: 'process',    text: 'BOOK RIDE', x: 250, y: 780 },
+  { id: 'avail',  type: 'decision',   text: 'DRIVER AVAIL?', x: 255, y: 900 },
+  
+  // Tracking & Backend
+  { id: 'be_track', type: 'process',   text: 'REAL-TIME TRACKING', x: 450, y: 930 },
+  { id: 'db_loc',  type: 'database',   text: 'LOCATION DB', x: 650, y: 920 },
+  
+  // Completion
+  { id: 'finish',  type: 'process',    text: 'COMPLETE TRIP', x: 450, y: 1100 },
+  { id: 'rate',    type: 'data',       text: 'INPUT RATING', x: 450, y: 1200 },
+  { id: 'end',     type: 'terminator', text: 'END', x: 450, y: 1320 },
+  
+  // Admin Loop (Side branch)
+  { id: 'admin_req', type: 'decision', text: 'ADMIN?', x: 800, y: 450 },
+  { id: 'adm_mod',   type: 'process',  text: 'MODERATION', x: 800, y: 600 },
+];
+
+// Flows: [fromId, toId, label]
+const flows = [
+  ['start', 'has_acc'],
+  ['has_acc', 'login', 'YES'],
+  ['has_acc', 'reg', 'NO'],
+  ['login', 'db_user'],
+  ['reg', 'db_user'],
+  ['db_user', 'home', 'AUTH OK'],
+  
+  ['home', 'dest'],
+  ['dest', 'route'],
+  ['route', 'book'],
+  ['book', 'avail'],
+  
+  ['avail', 'be_track', 'YES'],
+  ['avail', 'book', 'NO / RETRY'],
+  
+  ['be_track', 'db_loc'],
+  ['be_track', 'finish'],
+  ['finish', 'rate'],
+  ['rate', 'end'],
+  
+  ['home', 'admin_req'],
+  ['admin_req', 'adm_mod', 'YES'],
+  ['adm_mod', 'db_user']
+];
+
+// ─────────────────────────────────────────────
+// RENDER LOGIC
+// ─────────────────────────────────────────────
+const canvas = document.getElementById('canvas');
+const svg    = document.getElementById('svg-layer');
+
+const domShapes = {};
+
+shapes.forEach(s => {
+  const el = document.createElement('div');
+  el.className = `shape ${s.type}`;
+  el.id = 's-' + s.id;
+  el.style.left = s.x + 'px';
+  el.style.top  = s.y + 'px';
+  el.innerHTML = `<span>${s.text}</span>`;
+  
+  canvas.appendChild(el);
+  domShapes[s.id] = el;
+  makeDraggable(el, s);
+});
+
+function getAnchor(id, side) {
+  const el = domShapes[id];
+  const x = parseFloat(el.style.left);
+  const y = parseFloat(el.style.top);
+  const w = el.offsetWidth;
+  const h = el.offsetHeight;
+
+  if (side === 'top')    return { x: x + w/2, y: y };
+  if (side === 'bottom') return { x: x + w/2, y: y + h };
+  if (side === 'left')   return { x: x,       y: y + h/2 };
+  if (side === 'right')  return { x: x + w,   y: y + h/2 };
+}
+
+function drawFlows() {
+  svg.innerHTML = '';
+  const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+  const marker = document.createElementNS('http://www.w3.org/2000/svg', 'marker');
+  marker.setAttribute('id', 'arrowhead');
+  marker.setAttribute('markerWidth', '10');
+  marker.setAttribute('markerHeight', '7');
+  marker.setAttribute('refX', '9');
+  marker.setAttribute('refY', '3.5');
+  marker.setAttribute('orient', 'auto');
+  marker.innerHTML = '<polygon points="0 0, 10 3.5, 0 7" fill="#94a3b8" />';
+  defs.appendChild(marker);
+  svg.appendChild(defs);
+
+  flows.forEach(([fId, tId, label]) => {
+    const fEl = domShapes[fId];
+    const tEl = domShapes[tId];
+    const fX = parseFloat(fEl.style.left);
+    const tX = parseFloat(tEl.style.left);
+    const fY = parseFloat(fEl.style.top);
+    const tY = parseFloat(tEl.style.top);
+
+    let p1, p2;
+    if (Math.abs(fX - tX) < 50) {
+      p1 = getAnchor(fId, fY < tY ? 'bottom' : 'top');
+      p2 = getAnchor(tId, fY < tY ? 'top' : 'bottom');
+    } else {
+      p1 = getAnchor(fId, fX < tX ? 'right' : 'left');
+      p2 = getAnchor(tId, fX < tX ? 'left' : 'right');
+    }
+
+    const line = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    const midY = (p1.y + p2.y) / 2;
+    // Step line
+    const d = `M${p1.x},${p1.y} L${p1.x},${midY} L${p2.x},${midY} L${p2.x},${p2.y}`;
+    
+    line.setAttribute('d', d);
+    line.setAttribute('fill', 'none');
+    line.setAttribute('stroke', '#cbd5e1');
+    line.setAttribute('stroke-width', '2');
+    line.setAttribute('marker-end', 'url(#arrowhead)');
+    svg.appendChild(line);
+
+    if (label) {
+      const txt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      txt.setAttribute('x', (p1.x + p2.x) / 2 + 5);
+      txt.setAttribute('y', midY - 5);
+      txt.setAttribute('font-size', '10');
+      txt.setAttribute('font-weight', '700');
+      txt.setAttribute('fill', '#64748b');
+      txt.textContent = label;
+      svg.appendChild(txt);
+    }
+  });
+}
+
+function makeDraggable(el, data) {
+  let sx, sy, ox, oy, dragging = false;
+  el.addEventListener('mousedown', e => {
+    if (e.button !== 0) return;
+    dragging = true;
+    sx = e.clientX; sy = e.clientY;
+    ox = parseFloat(el.style.left); oy = parseFloat(el.style.top);
+    el.classList.add('active');
+    e.preventDefault(); e.stopPropagation();
+
+    const onMove = ev => {
+      if (!dragging) return;
+      el.style.left = (ox + (ev.clientX - sx) / canvasScale) + 'px';
+      el.style.top  = (oy + (ev.clientY - sy) / canvasScale) + 'px';
+      drawFlows();
+    };
+    const onUp = () => {
+      dragging = false; el.classList.remove('active');
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+    };
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+  });
+}
+
+const wrap = document.getElementById('canvas-wrap');
+let canvasX = 0, canvasY = 0, canvasScale = 0.9;
+
+function apply() {
+  canvas.style.transform = `translate(${canvasX}px, ${canvasY}px) scale(${canvasScale})`;
+  canvas.style.transformOrigin = '0 0';
+}
+apply();
+drawFlows();
+
+let p = false, psx, psy, pox, poy;
+wrap.addEventListener('mousedown', e => {
+  if (e.target !== wrap && e.target !== canvas && e.target !== svg) return;
+  p = true; psx = e.clientX; psy = e.clientY; pox = canvasX; poy = canvasY;
+  wrap.classList.add('panning');
+});
+document.addEventListener('mousemove', e => {
+  if (!p) return;
+  canvasX = pox + (e.clientX - psx);
+  canvasY = poy + (e.clientY - psy);
+  apply();
+});
+document.addEventListener('mouseup', () => { p = false; wrap.classList.remove('panning'); });
+wrap.addEventListener('wheel', e => {
+  e.preventDefault();
+  canvasScale = Math.min(2, Math.max(0.3, canvasScale + (e.deltaY > 0 ? -0.05 : 0.05)));
+  apply();
+}, { passive: false });
+
+function resetView() { canvasX = 0; canvasY = 0; canvasScale = 0.9; apply(); }
+function zoomIn()  { canvasScale = Math.min(2, canvasScale + 0.1); apply(); }
+function zoomOut() { canvasScale = Math.max(0.3, canvasScale - 0.1); apply(); }
+</script>
+</body>
+</html>

@@ -61,9 +61,41 @@ class _ReceiptsPageState extends State<ReceiptsPage> {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        // "Folder" Tabs for vehicle types
+        Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Row(
+            children: [
+              const Text(
+                'Receipts',
+                style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Color(0xFF1E3A8A)),
+              ),
+              const Spacer(),
+              Container(
+                width: 300,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 4)),
+                  ],
+                ),
+                child: TextField(
+                  controller: _searchController,
+                  decoration: const InputDecoration(
+                    hintText: 'Search by Order ID, User, or Vehicle...',
+                    prefixIcon: Icon(Icons.search, color: Color(0xFF4C8CFF)),
+                    border: InputBorder.none,
+                    contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 15),
+                  ),
+                  onChanged: _filterReceipts,
+                ),
+              ),
+            ],
+          ),
+        ),
         Container(
-          margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+          margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+          padding: const EdgeInsets.all(4),
           decoration: BoxDecoration(
             color: Colors.grey.shade200,
             borderRadius: BorderRadius.circular(12),
@@ -83,18 +115,9 @@ class _ReceiptsPageState extends State<ReceiptsPage> {
                     duration: const Duration(milliseconds: 200),
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     decoration: BoxDecoration(
-                      color:
-                          isSelected ? const Color(0xFF4C8CFF) : Colors.transparent,
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: isSelected
-                          ? [
-                              BoxShadow(
-                                color: Colors.blue.withValues(alpha: 0.3),
-                                blurRadius: 8,
-                                offset: const Offset(0, 4),
-                              )
-                            ]
-                          : [],
+                      color: isSelected ? const Color(0xFF4C8CFF) : Colors.transparent,
+                      borderRadius: BorderRadius.circular(10),
+                      boxShadow: isSelected ? [BoxShadow(color: Colors.blue.withValues(alpha: 0.2), blurRadius: 8)] : null,
                     ),
                     child: Center(
                       child: Text(
@@ -109,22 +132,6 @@ class _ReceiptsPageState extends State<ReceiptsPage> {
                 ),
               );
             }).toList(),
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: TextField(
-            controller: _searchController,
-            onChanged: _filterReceipts,
-            decoration: InputDecoration(
-              hintText: 'Search by Order ID, User, or Vehicle...',
-              prefixIcon: const Icon(Icons.search),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              filled: true,
-              fillColor: Colors.white,
-            ),
           ),
         ),
         Expanded(

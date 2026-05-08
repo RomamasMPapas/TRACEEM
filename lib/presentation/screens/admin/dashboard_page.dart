@@ -32,10 +32,8 @@ class _DashboardPageState extends State<DashboardPage> {
     {'name': 'Tony Wheels', 'rating': 4.0, 'type': 'Taxi'},
   ];
 
-
   int _touchedBarIndex = -1;
   int _touchedPieIndex = -1;
-
 
   @override
   Widget build(BuildContext context) {
@@ -48,14 +46,16 @@ class _DashboardPageState extends State<DashboardPage> {
             if (ratingsSnapshot.hasError || receiptsSnapshot.hasError) {
               return const Center(child: Text('Something went wrong'));
             }
-            
+
             if (ratingsSnapshot.connectionState == ConnectionState.waiting ||
                 receiptsSnapshot.connectionState == ConnectionState.waiting) {
               return const Center(child: CircularProgressIndicator());
             }
 
             // --- PROCESS RATINGS ---
-            final allRatings = [..._mockDriverRatings]; // Include mock for fuller chart
+            final allRatings = [
+              ..._mockDriverRatings,
+            ]; // Include mock for fuller chart
             for (var doc in ratingsSnapshot.data!.docs) {
               final data = doc.data() as Map<String, dynamic>;
               allRatings.add({
@@ -65,52 +65,87 @@ class _DashboardPageState extends State<DashboardPage> {
               });
             }
 
-            final filteredDrivers = allRatings.where((d) => 
-              _selectedType == 'All' || d['type'] == _selectedType
-            ).toList();
+            final filteredDrivers = allRatings
+                .where(
+                  (d) => _selectedType == 'All' || d['type'] == _selectedType,
+                )
+                .toList();
 
             // Group by driver to get average
             Map<String, List<double>> grouped = {};
             for (var d in filteredDrivers) {
               grouped.putIfAbsent(d['name'], () => []).add(d['rating']);
             }
-            
-            List<Map<String, dynamic>> driverAverages = grouped.entries.map((e) {
+
+            List<Map<String, dynamic>> driverAverages = grouped.entries.map((
+              e,
+            ) {
               double avg = e.value.reduce((a, b) => a + b) / e.value.length;
               return {
                 'name': e.key,
                 'rating': avg,
-                'type': filteredDrivers.firstWhere((d) => d['name'] == e.key)['type'],
+                'type': filteredDrivers.firstWhere(
+                  (d) => d['name'] == e.key,
+                )['type'],
               };
             }).toList();
 
             // Calculate satisfaction
-            final int satisfiedCount = driverAverages.where((d) => d['rating'] >= 4).length;
-            final int neutralCount = driverAverages.where((d) => d['rating'] >= 3 && d['rating'] < 4).length;
-            final int dissatisfiedCount = driverAverages.where((d) => d['rating'] < 3).length;
+            final int satisfiedCount = driverAverages
+                .where((d) => d['rating'] >= 4)
+                .length;
+            final int neutralCount = driverAverages
+                .where((d) => d['rating'] >= 3 && d['rating'] < 4)
+                .length;
+            final int dissatisfiedCount = driverAverages
+                .where((d) => d['rating'] < 3)
+                .length;
 
             // --- PROCESS PROFITS ---
             double totalProfit = 0;
-            Map<int, double> motoMonthly = {0: 12000, 1: 15000, 2: 11000, 3: 18000, 4: 22000, 5: 25000};
-            Map<int, double> taxiMonthly = {0: 35000, 1: 32000, 2: 40000, 3: 38000, 4: 45000, 5: 48000};
+            Map<int, double> motoMonthly = {
+              0: 12000,
+              1: 15000,
+              2: 11000,
+              3: 18000,
+              4: 22000,
+              5: 25000,
+            };
+            Map<int, double> taxiMonthly = {
+              0: 35000,
+              1: 32000,
+              2: 40000,
+              3: 38000,
+              4: 45000,
+              5: 48000,
+            };
 
             for (var doc in receiptsSnapshot.data!.docs) {
               final data = doc.data() as Map<String, dynamic>;
               final amount = (data['amount'] as num?)?.toDouble() ?? 0.0;
-              final date = (data['date'] as Timestamp?)?.toDate() ?? DateTime.now();
+              final date =
+                  (data['date'] as Timestamp?)?.toDate() ?? DateTime.now();
               final type = data['type'] ?? 'Motorcycle';
-              
+
               totalProfit += amount;
-              
+
               // Only add to June (index 5) for demo purposes of new data
-              if (date.month == 5) { // May (index 4) or 6 for June
-                 if (type == 'Motorcycle') motoMonthly[5] = (motoMonthly[5] ?? 0) + amount;
-                 else taxiMonthly[5] = (taxiMonthly[5] ?? 0) + amount;
+              if (date.month == 5) {
+                // May (index 4) or 6 for June
+                if (type == 'Motorcycle') {
+                  motoMonthly[5] = (motoMonthly[5] ?? 0) + amount;
+                } else {
+                  taxiMonthly[5] = (taxiMonthly[5] ?? 0) + amount;
+                }
               }
             }
 
-            final List<FlSpot> motoSpots = motoMonthly.entries.map((e) => FlSpot(e.key.toDouble(), e.value)).toList();
-            final List<FlSpot> taxiSpots = taxiMonthly.entries.map((e) => FlSpot(e.key.toDouble(), e.value)).toList();
+            final List<FlSpot> motoSpots = motoMonthly.entries
+                .map((e) => FlSpot(e.key.toDouble(), e.value))
+                .toList();
+            final List<FlSpot> taxiSpots = taxiMonthly.entries
+                .map((e) => FlSpot(e.key.toDouble(), e.value))
+                .toList();
 
             return SingleChildScrollView(
               padding: const EdgeInsets.all(24.0),
@@ -119,7 +154,11 @@ class _DashboardPageState extends State<DashboardPage> {
                 children: [
                   const Text(
                     'Admin Dashboard Analytics',
-                    style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Color(0xFF1E3A8A)),
+                    style: TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF1E3A8A),
+                    ),
                   ),
                   const SizedBox(height: 20),
 
@@ -140,7 +179,9 @@ class _DashboardPageState extends State<DashboardPage> {
                               duration: const Duration(milliseconds: 200),
                               padding: const EdgeInsets.symmetric(vertical: 12),
                               decoration: BoxDecoration(
-                                color: isSelected ? const Color(0xFF4C8CFF) : Colors.transparent,
+                                color: isSelected
+                                    ? const Color(0xFF4C8CFF)
+                                    : Colors.transparent,
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: Center(
@@ -148,7 +189,9 @@ class _DashboardPageState extends State<DashboardPage> {
                                   type,
                                   style: TextStyle(
                                     fontWeight: FontWeight.bold,
-                                    color: isSelected ? Colors.white : Colors.grey.shade700,
+                                    color: isSelected
+                                        ? Colors.white
+                                        : Colors.grey.shade700,
                                   ),
                                 ),
                               ),
@@ -170,7 +213,11 @@ class _DashboardPageState extends State<DashboardPage> {
                       const SizedBox(width: 24),
                       Expanded(
                         flex: 1,
-                        child: _buildSatisfactionCard(satisfiedCount, neutralCount, dissatisfiedCount),
+                        child: _buildSatisfactionCard(
+                          satisfiedCount,
+                          neutralCount,
+                          dissatisfiedCount,
+                        ),
                       ),
                     ],
                   ),
@@ -178,7 +225,11 @@ class _DashboardPageState extends State<DashboardPage> {
                   const SizedBox(height: 24),
 
                   // Second Row: Profit Chart
-                  _buildProfitCard(motoSpots, taxiSpots, totalProfit + 73000), // Base mock + real
+                  _buildProfitCard(
+                    motoSpots,
+                    taxiSpots,
+                    totalProfit + 73000,
+                  ), // Base mock + real
                 ],
               ),
             );
@@ -197,9 +248,15 @@ class _DashboardPageState extends State<DashboardPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Overall Ratings of Drivers', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const Text(
+              'Overall Ratings of Drivers',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
             const SizedBox(height: 8),
-            const Text('Click on a bar to view details.', style: TextStyle(color: Colors.grey)),
+            const Text(
+              'Click on a bar to view details.',
+              style: TextStyle(color: Colors.grey),
+            ),
             const SizedBox(height: 24),
             SizedBox(
               height: 300,
@@ -209,7 +266,9 @@ class _DashboardPageState extends State<DashboardPage> {
                   barTouchData: BarTouchData(
                     touchCallback: (event, response) {
                       setState(() {
-                        if (!event.isInterestedForInteractions || response == null || response.spot == null) {
+                        if (!event.isInterestedForInteractions ||
+                            response == null ||
+                            response.spot == null) {
                           _touchedBarIndex = -1;
                           return;
                         }
@@ -226,16 +285,28 @@ class _DashboardPageState extends State<DashboardPage> {
                           if (idx >= 0 && idx < drivers.length) {
                             return Padding(
                               padding: const EdgeInsets.only(top: 8),
-                              child: Text(drivers[idx]['name'].toString().split(' ')[0], style: const TextStyle(fontSize: 10)),
+                              child: Text(
+                                drivers[idx]['name'].toString().split(' ')[0],
+                                style: const TextStyle(fontSize: 10),
+                              ),
                             );
                           }
                           return const Text('');
                         },
                       ),
                     ),
-                    leftTitles: AxisTitles(sideTitles: SideTitles(showTitles: true, reservedSize: 30)),
-                    topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                    rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                    leftTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        reservedSize: 30,
+                      ),
+                    ),
+                    topTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false),
+                    ),
+                    rightTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false),
+                    ),
                   ),
                   barGroups: drivers.asMap().entries.map((e) {
                     return BarChartGroupData(
@@ -243,10 +314,16 @@ class _DashboardPageState extends State<DashboardPage> {
                       barRods: [
                         BarChartRodData(
                           toY: e.value['rating'],
-                          color: e.key == _touchedBarIndex ? Colors.amber : const Color(0xFF4C8CFF),
+                          color: e.key == _touchedBarIndex
+                              ? Colors.amber
+                              : const Color(0xFF4C8CFF),
                           width: 18,
                           borderRadius: BorderRadius.circular(4),
-                          backDrawRodData: BackgroundBarChartRodData(show: true, toY: 5, color: Colors.grey.shade100),
+                          backDrawRodData: BackgroundBarChartRodData(
+                            show: true,
+                            toY: 5,
+                            color: Colors.grey.shade100,
+                          ),
                         ),
                       ],
                     );
@@ -268,7 +345,10 @@ class _DashboardPageState extends State<DashboardPage> {
         padding: const EdgeInsets.all(20.0),
         child: Column(
           children: [
-            const Text('Ride Satisfaction', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const Text(
+              'Ride Satisfaction',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
             const SizedBox(height: 24),
             SizedBox(
               height: 200,
@@ -283,8 +363,9 @@ class _DashboardPageState extends State<DashboardPage> {
                           _touchedPieIndex = -1;
                           return;
                         }
-                        _touchedPieIndex =
-                            pieTouchResponse.touchedSection!.touchedSectionIndex;
+                        _touchedPieIndex = pieTouchResponse
+                            .touchedSection!
+                            .touchedSectionIndex;
                       });
                     },
                   ),
@@ -333,7 +414,11 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
-  Widget _buildProfitCard(List<FlSpot> motoSpots, List<FlSpot> taxiSpots, double total) {
+  Widget _buildProfitCard(
+    List<FlSpot> motoSpots,
+    List<FlSpot> taxiSpots,
+    double total,
+  ) {
     return Card(
       elevation: 4,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
@@ -348,11 +433,28 @@ class _DashboardPageState extends State<DashboardPage> {
                 const Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Monthly Profit Analysis', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF1E3A8A))),
-                    Text('Net revenue after platform fees', style: TextStyle(color: Colors.grey)),
+                    Text(
+                      'Monthly Profit Analysis',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF1E3A8A),
+                      ),
+                    ),
+                    Text(
+                      'Net revenue after platform fees',
+                      style: TextStyle(color: Colors.grey),
+                    ),
                   ],
                 ),
-                Text('Total: ₱${NumberFormat('#,###').format(total)}', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: Colors.green.shade700)),
+                Text(
+                  'Total: ₱${NumberFormat('#,###').format(total)}',
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w900,
+                    color: Colors.green.shade700,
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 30),
@@ -386,10 +488,12 @@ class _DashboardPageState extends State<DashboardPage> {
                         ),
                       ),
                     ),
-                    topTitles:
-                        const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                    rightTitles:
-                        const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                    topTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false),
+                    ),
+                    rightTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false),
+                    ),
                   ),
                   borderData: FlBorderData(show: false),
                   lineBarsData: [
@@ -425,9 +529,11 @@ class _DashboardPageState extends State<DashboardPage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                if (_selectedType == 'All' || _selectedType == 'Motorcycle') _buildLegend(Colors.orange, 'Motorcycle Profit'),
+                if (_selectedType == 'All' || _selectedType == 'Motorcycle')
+                  _buildLegend(Colors.orange, 'Motorcycle Profit'),
                 if (_selectedType == 'All') const SizedBox(width: 24),
-                if (_selectedType == 'All' || _selectedType == 'Taxi') _buildLegend(const Color(0xFF4C8CFF), 'Taxi Profit'),
+                if (_selectedType == 'All' || _selectedType == 'Taxi')
+                  _buildLegend(const Color(0xFF4C8CFF), 'Taxi Profit'),
               ],
             ),
           ],
@@ -436,5 +542,22 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
-  Widget _buildLegend(Color c, String t) => Row(mainAxisSize: MainAxisSize.min, children: [Container(width: 12, height: 12, decoration: BoxDecoration(color: c, borderRadius: BorderRadius.circular(3))), const SizedBox(width: 8), Text(t, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold))]);
+  Widget _buildLegend(Color c, String t) => Row(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      Container(
+        width: 12,
+        height: 12,
+        decoration: BoxDecoration(
+          color: c,
+          borderRadius: BorderRadius.circular(3),
+        ),
+      ),
+      const SizedBox(width: 8),
+      Text(
+        t,
+        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+      ),
+    ],
+  );
 }

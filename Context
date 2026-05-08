@@ -17,6 +17,21 @@
 🔵 ***README.md***
 🟢 ---The main project documentation file containing the overview and setup instructions.---
 
+🔵 ***ERD.html***
+🟢 ---An interactive Entity Relationship Diagram visualizing the database schema, Firestore collections, and cross-layer relationships.---
+
+🔵 ***SYSTEM_FLOW.html***
+🟢 ---A high-level system flowchart visualizing the overall operational logic and decision branching of the entire TRACE EM ecosystem.---
+
+🔵 ***USER_FLOW.html***
+🟢 ---A detailed flowchart specifically mapping the end-to-side logic for Riders and Drivers, from authentication to ride completion.---
+
+🔵 ***ADMIN_FLOW.html***
+🟢 ---A specialized logic flowchart documenting the administrative workflows, including moderation, support resolution, and financial auditing.---
+
+🔵 ***DATABASE_FLOW.html***
+🟢 ---A technical flowchart visualizing the data lifecycle, synchronization patterns between Firestore, and real-time processing via the FastAPI backend.---
+
 🔵 ***add_comments.dart***
 🟢 ---A utility script used to programmatically add comments or documentation to code files.---
 
@@ -167,7 +182,7 @@
 🟢 ---Admin interface for managing, viewing, and moderating registered customers.---
 
 🔵 ***lib/presentation/screens/admin/drivers_page.dart***
-🟢 ---Admin interface for managing, approving, and monitoring registered drivers.---
+🟢 ---Standardized admin interface for managing, approving, and monitoring registered drivers, featuring a unified header and sorting layout.---
 
 🔵 ***lib/presentation/screens/admin/orders_management_page.dart***
 🟢 ---Admin interface for overseeing all active and past orders in the entire system.---
@@ -176,10 +191,10 @@
 🟢 ---Admin interface for reviewing, responding to, and resolving submitted user complaints.---
 
 🔵 ***lib/presentation/screens/admin/ratings_page.dart***
-🟢 ---Admin interface to monitor and review the ratings and feedback left for drivers.---
+🟢 ---Standardized admin interface to monitor and review driver ratings and feedback, featuring a unified header and sorting layout.---
 
 🔵 ***lib/presentation/screens/admin/receipts_page.dart***
-🟢 ---Admin interface to view transaction records, histories, and generated receipts.---
+🟢 ---Standardized admin interface to view transaction records and generated receipts, featuring a unified header and sorting layout.---
 
 🔴 <<<lib/presentation/widgets>>>
 🔵 ***lib/presentation/widgets/curve_painter.dart***

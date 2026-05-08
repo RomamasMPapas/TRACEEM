@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>TRACE EM — Database Logic Flow</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Inter', sans-serif; background: #fff7ed; overflow: hidden; color: #334155; }
+  #topbar { position: fixed; top: 0; left: 0; right: 0; height: 54px; background: #fff; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; padding: 0 24px; z-index: 1000; }
+  #topbar .logo { font-size: 14px; font-weight: 800; color: #ea580c; letter-spacing: 2px; }
+  #topbar .badge { margin-left: auto; font-size: 11px; background: #ea580c; color: #fff; border-radius: 20px; padding: 4px 12px; font-weight: 600; }
+  #canvas-wrap { position: fixed; top: 54px; left: 0; right: 0; bottom: 0; overflow: hidden; cursor: grab; }
+  #canvas { position: absolute; width: 4000px; height: 4000px; background-image: radial-gradient(#fed7aa 1px, transparent 1px); background-size: 30px 30px; }
+  #svg-layer { position: absolute; top: 0; left: 0; width: 4000px; height: 4000px; pointer-events: none; }
+  .shape { position: absolute; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 11px; font-weight: 700; padding: 10px; cursor: move; z-index: 10; background: #fff; min-width: 140px; min-height: 50px; text-transform: uppercase; }
+  .terminator { border: 2px solid #14b8a6; border-radius: 40px; color: #0f766e; }
+  .process { border: 2px solid #f97316; border-radius: 4px; color: #9a3412; }
+  .decision { width: 110px; height: 110px; border: 2px solid #fb923c; transform: rotate(45deg); }
+  .decision span { transform: rotate(-45deg); width: 100%; }
+  .data { border: 2px solid #d946ef; transform: skewX(-20deg); color: #a21caf; }
+  .data span { transform: skewX(20deg); }
+  .database { border: 2px solid #ea580c; border-radius: 12px / 24px; color: #9a3412; min-height: 70px; }
+</style>
+</head>
+<body>
+<div id="topbar"><span class="logo">TRACE EM</span><span class="badge">DATABASE & DATA FLOW</span></div>
+<div id="canvas-wrap"><div id="canvas"><svg id="svg-layer"></svg></div></div>
+<script>
+const shapes = [
+  { id: 'd1', type: 'terminator', text: 'DATA INPUT (APP)', x: 450, y: 50 },
+  { id: 'd2', type: 'process',    text: 'CLIENT-SIDE VALIDATION', x: 450, y: 150 },
+  { id: 'd3', type: 'decision',   text: 'VALID DATA?', x: 455, y: 250 },
+  
+  // Storage Layers
+  { id: 'd4', type: 'database',   text: 'CLOUD FIRESTORE', x: 450, y: 450 },
+  { id: 'd5', type: 'database',   text: 'FIREBASE AUTH (UID)', x: 200, y: 450 },
+  
+  // Backend Processing
+  { id: 'd6', type: 'process',    text: 'FASTAPI GPS INGESTION', x: 700, y: 450 },
+  { id: 'd7', type: 'database',   text: 'IN-MEMORY CACHE', x: 700, y: 580 },
+  
+  // Output
+  { id: 'd8', type: 'process',    text: 'QUERY / READ REQUEST', x: 450, y: 700 },
+  { id: 'd9', type: 'data',       text: 'JSON RESPONSE DATA', x: 450, y: 820 },
+  { id: 'd10',type: 'terminator', text: 'UI RENDER', x: 450, y: 950 }
+];
+const flows = [
+  ['d1', 'd2'], ['d2', 'd3'],
+  ['d3', 'd4', 'YES'], ['d3', 'd1', 'NO'],
+  ['d4', 'd5', 'SYNC UID'],
+  ['d4', 'd6', 'SYNC STREAM'],
+  ['d6', 'd7'], ['d7', 'd8'],
+  ['d4', 'd8'], ['d8', 'd9'], ['d9', 'd10']
+];
+const canvas = document.getElementById('canvas'); const svg = document.getElementById('svg-layer'); const domShapes = {};
+shapes.forEach(s => {
+  const el = document.createElement('div'); el.className = `shape ${s.type}`; el.id = 'd-' + s.id;
+  el.style.left = s.x + 'px'; el.style.top = s.y + 'px'; el.innerHTML = `<span>${s.text}</span>`;
+  canvas.appendChild(el); domShapes[s.id] = el; makeDraggable(el);
+});
+function getAnchor(id, side) {
+  const el = domShapes[id]; const x = parseFloat(el.style.left); const y = parseFloat(el.style.top);
+  const w = el.offsetWidth; const h = el.offsetHeight;
+  if (side === 'top') return { x: x + w/2, y: y }; if (side === 'bottom') return { x: x + w/2, y: y + h };
+  if (side === 'left') return { x: x, y: y + h/2 }; if (side === 'right') return { x: x + w, y: y + h/2 };
+}
+function drawFlows() {
+  svg.innerHTML = '<defs><marker id="arrow" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#94a3b8"/></marker></defs>';
+  flows.forEach(([fId, tId, label]) => {
+    const fX = parseFloat(domShapes[fId].style.left); const tX = parseFloat(domShapes[tId].style.left);
+    const fY = parseFloat(domShapes[fId].style.top); const tY = parseFloat(domShapes[tId].style.top);
+    let p1 = getAnchor(fId, fY < tY ? 'bottom' : 'top'); let p2 = getAnchor(tId, fY < tY ? 'top' : 'bottom');
+    if (Math.abs(fX - tX) > 100) { p1 = getAnchor(fId, fX < tX ? 'right' : 'left'); p2 = getAnchor(tId, fX < tX ? 'left' : 'right'); }
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    const midY = (p1.y + p2.y) / 2;
+    path.setAttribute('d', `M${p1.x},${p1.y} L${p1.x},${midY} L${p2.x},${midY} L${p2.x},${p2.y}`);
+    path.setAttribute('fill', 'none'); path.setAttribute('stroke', '#cbd5e1'); path.setAttribute('stroke-width', '2'); path.setAttribute('marker-end', 'url(#arrow)');
+    svg.appendChild(path);
+    if (label) { const txt = document.createElementNS('http://www.w3.org/2000/svg', 'text'); txt.setAttribute('x', (p1.x + p2.x)/2 + 5); txt.setAttribute('y', midY - 5); txt.setAttribute('font-size', '10'); txt.setAttribute('font-weight', '700'); txt.setAttribute('fill', '#64748b'); txt.textContent = label; svg.appendChild(txt); }
+  });
+}
+function makeDraggable(el) {
+  let sx, sy, ox, oy, dragging = false;
+  el.addEventListener('mousedown', e => {
+    if (e.button !== 0) return; dragging = true; sx = e.clientX; sy = e.clientY;
+    ox = parseFloat(el.style.left); oy = parseFloat(el.style.top);
+    const onMove = ev => { if (!dragging) return; el.style.left = (ox + (ev.clientX - sx)) + 'px'; el.style.top = (oy + (ev.clientY - sy)) + 'px'; drawFlows(); };
+    const onUp = () => { dragging = false; document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onUp); };
+    document.addEventListener('mousemove', onMove); document.addEventListener('mouseup', onUp);
+  });
+}
+drawFlows();
+</script>
+</body>
+</html>

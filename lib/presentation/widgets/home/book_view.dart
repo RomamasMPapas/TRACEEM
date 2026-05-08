@@ -27,51 +27,50 @@ class BookViewState extends State<BookView> {
   // === MAP & ROUTING STATE ===
   /// The default map center, initialized based on the user's detected region.
   late LatLng _initialCenter;
-  
+
   /// The precise coordinate pin for the pick-up location.
   LatLng? _fromLatLng;
-  
+
   /// The precise coordinate pin for the destination.
   LatLng? _toLatLng;
-  
+
   /// Toggles the UI between the standard map view and the booking/details view.
   bool _isBookingMode = false;
-  
+
   /// Tracks if the app is currently geocoding an address (currently unused flag).
   final bool _isGeocoding = false;
-  
+
   /// Tracks if the app is currently fetching the route polyline from the routing server.
   bool _isFetchingRoute = false;
-  
+
   /// The collection of coordinates that form the drawn polyline path on the map.
   List<LatLng> _routePoints = [];
-  
+
   /// The total physical distance of the route in meters, used to calculate the fare.
   double? _routeDistanceMeters;
-  
+
   /// The active vehicle type selection ('Motorcycle' or 'Taxi').
   String _selectedVehicle = 'Motorcycle';
-  
+
   /// Controls the map's movement, zoom, and interactions programmatically.
   final MapController _mapController = MapController();
 
   // === DRIVE SIMULATION STATE ===
   /// Tracks whether the animated drive sequence is currently running.
   bool _isSimulatingDrive = false;
-  
+
   /// The active coordinate of the vehicle marker as it moves along the polyline.
   LatLng? _animatedVehiclePos;
-  
+
   /// The current index of the route points array the simulated vehicle is at.
   int _currentRouteIndex = 0;
-  
+
   /// The timer that ticks to progress the simulated vehicle along the path.
   Timer? _simulationTimer;
-  
+
   /// Holds the data dictionary of the driver currently assigned to the user.
   Map<String, dynamic>? _currentDriver;
-  
-  
+
   /// Tracks if the user has explicitly selected a vehicle, which allows confirming the booking.
   bool _hasSelectedVehicle = false;
 
@@ -1032,7 +1031,9 @@ class BookViewState extends State<BookView> {
       barrierDismissible: false,
       builder: (BuildContext context) {
         return Dialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
           clipBehavior: Clip.antiAlias,
           child: Container(
             width: 360,
@@ -1072,9 +1073,13 @@ class BookViewState extends State<BookView> {
                           child: Image.network(
                             driver['pic'],
                             fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) => Container(
+                            errorBuilder: (_, _, _) => Container(
                               color: Colors.white24,
-                              child: const Icon(Icons.person, size: 40, color: Colors.white),
+                              child: const Icon(
+                                Icons.person,
+                                size: 40,
+                                color: Colors.white,
+                              ),
                             ),
                           ),
                         ),
@@ -1082,7 +1087,10 @@ class BookViewState extends State<BookView> {
                       const SizedBox(height: 12),
                       // "Driver Found" badge
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 5,
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.white.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(20),
@@ -1090,7 +1098,11 @@ class BookViewState extends State<BookView> {
                         child: const Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.check_circle_rounded, color: Colors.greenAccent, size: 16),
+                            Icon(
+                              Icons.check_circle_rounded,
+                              color: Colors.greenAccent,
+                              size: 16,
+                            ),
                             SizedBox(width: 6),
                             Text(
                               'DRIVER FOUND',
@@ -1119,7 +1131,11 @@ class BookViewState extends State<BookView> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Icon(Icons.star_rounded, color: Colors.amber, size: 18),
+                          const Icon(
+                            Icons.star_rounded,
+                            color: Colors.amber,
+                            size: 18,
+                          ),
                           const SizedBox(width: 4),
                           Text(
                             '${driver['rating']}  •  Active Now',
@@ -1181,7 +1197,10 @@ class BookViewState extends State<BookView> {
                           onPressed: () => Navigator.of(context).pop(),
                           child: const Text(
                             'CANCEL',
-                            style: TextStyle(fontWeight: FontWeight.w800, letterSpacing: 1),
+                            style: TextStyle(
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 1,
+                            ),
                           ),
                         ),
                       ),
@@ -1197,7 +1216,9 @@ class BookViewState extends State<BookView> {
                             borderRadius: BorderRadius.circular(12),
                             boxShadow: [
                               BoxShadow(
-                                color: const Color(0xFF4C8CFF).withValues(alpha: 0.4),
+                                color: const Color(
+                                  0xFF4C8CFF,
+                                ).withValues(alpha: 0.4),
                                 blurRadius: 10,
                                 offset: const Offset(0, 4),
                               ),
@@ -1218,28 +1239,38 @@ class BookViewState extends State<BookView> {
                                 // Fetch the actual username from Firestore (displayName is not set on signup)
                                 String userName = 'Anonymous User';
                                 if (user != null) {
-                                  final userDoc = await FirebaseFirestore.instance
+                                  final userDoc = await FirebaseFirestore
+                                      .instance
                                       .collection('users')
                                       .doc(user.uid)
                                       .get();
-                                  userName = userDoc.data()?['username'] ?? user.email ?? 'Anonymous User';
+                                  userName =
+                                      userDoc.data()?['username'] ??
+                                      user.email ??
+                                      'Anonymous User';
                                 }
-                                final double distanceKm = (_routeDistanceMeters ?? 0) / 1000;
-                                final double price = _selectedVehicle == 'Motorcycle'
+                                final double distanceKm =
+                                    (_routeDistanceMeters ?? 0) / 1000;
+                                final double price =
+                                    _selectedVehicle == 'Motorcycle'
                                     ? (15.0 + (distanceKm * 50.0))
                                     : 80.0;
 
-                                await FirebaseFirestore.instance.collection('receipts').add({
-                                  'orderId': '#TEM-2026-${DateTime.now().millisecondsSinceEpoch.toString().substring(7)}',
-                                  'user': userName,
-                                  'userId': user?.uid,
-                                  'driver': driver['name'],
-                                  'date': FieldValue.serverTimestamp(),
-                                  'amount': price,
-                                  'type': _selectedVehicle,
-                                  'route': '${_fromController.text} to ${_toController.text}',
-                                  'status': 'Completed',
-                                });
+                                await FirebaseFirestore.instance
+                                    .collection('receipts')
+                                    .add({
+                                      'orderId':
+                                          '#TEM-2026-${DateTime.now().millisecondsSinceEpoch.toString().substring(7)}',
+                                      'user': userName,
+                                      'userId': user?.uid,
+                                      'driver': driver['name'],
+                                      'date': FieldValue.serverTimestamp(),
+                                      'amount': price,
+                                      'type': _selectedVehicle,
+                                      'route':
+                                          '${_fromController.text} to ${_toController.text}',
+                                      'status': 'Completed',
+                                    });
 
                                 if (mounted) {
                                   Navigator.of(context).pop();
@@ -1340,7 +1371,8 @@ class BookViewState extends State<BookView> {
           ),
           elevation: 10,
           backgroundColor: Colors.white,
-          child: SingleChildScrollView( // Added scroll view to avoid overflow on small screens
+          child: SingleChildScrollView(
+            // Added scroll view to avoid overflow on small screens
             child: Container(
               padding: const EdgeInsets.all(20),
               width: MediaQuery.of(context).size.width * 0.9,
@@ -1367,13 +1399,17 @@ class BookViewState extends State<BookView> {
                             color: Colors.grey.shade100,
                             shape: BoxShape.circle,
                           ),
-                          child: const Icon(Icons.close, size: 20, color: Colors.grey),
+                          child: const Icon(
+                            Icons.close,
+                            size: 20,
+                            color: Colors.grey,
+                          ),
                         ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 16),
-                  
+
                   // Tracking Number
                   Container(
                     width: double.infinity,
@@ -1396,7 +1432,7 @@ class BookViewState extends State<BookView> {
                     ),
                   ),
                   const SizedBox(height: 20),
-                  
+
                   // Driver Info Section (Premium Look)
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.center,
@@ -1408,7 +1444,11 @@ class BookViewState extends State<BookView> {
                           color: Colors.blue.shade50,
                           shape: BoxShape.circle,
                           boxShadow: [
-                            BoxShadow(color: Colors.blue.withValues(alpha: 0.1), blurRadius: 10, offset: const Offset(0, 4)),
+                            BoxShadow(
+                              color: Colors.blue.withValues(alpha: 0.1),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            ),
                           ],
                           border: Border.all(color: Colors.white, width: 3),
                         ),
@@ -1417,7 +1457,13 @@ class BookViewState extends State<BookView> {
                             driver['pic'],
                             fit: BoxFit.cover,
                             errorBuilder: (context, error, stackTrace) =>
-                                const Center(child: Icon(Icons.person, size: 30, color: Colors.blueGrey)),
+                                const Center(
+                                  child: Icon(
+                                    Icons.person,
+                                    size: 30,
+                                    color: Colors.blueGrey,
+                                  ),
+                                ),
                           ),
                         ),
                       ),
@@ -1437,16 +1483,26 @@ class BookViewState extends State<BookView> {
                             const SizedBox(height: 4),
                             Text(
                               '${driver['vehicle']} • ${driver['plate']}',
-                              style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: Colors.grey.shade600,
+                              ),
                             ),
                             const SizedBox(height: 4),
                             Row(
                               children: [
-                                const Icon(Icons.star_rounded, color: Colors.amber, size: 16),
+                                const Icon(
+                                  Icons.star_rounded,
+                                  color: Colors.amber,
+                                  size: 16,
+                                ),
                                 const SizedBox(width: 4),
                                 Text(
                                   '${driver['rating']}',
-                                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 13,
+                                  ),
                                 ),
                               ],
                             ),
@@ -1455,12 +1511,12 @@ class BookViewState extends State<BookView> {
                       ),
                     ],
                   ),
-                  
+
                   const Padding(
                     padding: EdgeInsets.symmetric(vertical: 20),
                     child: Divider(height: 1, thickness: 1),
                   ),
-                  
+
                   // Distance and Total section (Modern Metrics)
                   Row(
                     children: [
@@ -1489,7 +1545,11 @@ class BookViewState extends State<BookView> {
                           ],
                         ),
                       ),
-                      Container(width: 1, height: 40, color: Colors.grey.shade300),
+                      Container(
+                        width: 1,
+                        height: 40,
+                        color: Colors.grey.shade300,
+                      ),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.end,
@@ -1518,7 +1578,7 @@ class BookViewState extends State<BookView> {
                     ],
                   ),
                   const SizedBox(height: 25),
-                  
+
                   // Map Reference
                   ClipRRect(
                     borderRadius: BorderRadius.circular(16),
@@ -1575,7 +1635,7 @@ class BookViewState extends State<BookView> {
                     ),
                   ),
                   const SizedBox(height: 25),
-                  
+
                   // Actions
                   Container(
                     width: double.infinity,

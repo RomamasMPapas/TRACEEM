@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-
 /// A premium dialog for users to rate their ride experience.
 /// Includes driver info, star rating selection, and a comment section.
 class RatingDialog extends StatefulWidget {
@@ -80,7 +79,11 @@ class _RatingDialogState extends State<RatingDialog> {
                       top: 10,
                       right: 10,
                       child: IconButton(
-                        icon: const Icon(Icons.close, color: Colors.white, size: 20),
+                        icon: const Icon(
+                          Icons.close,
+                          color: Colors.white,
+                          size: 20,
+                        ),
                         onPressed: () => Navigator.pop(context),
                       ),
                     ),
@@ -141,7 +144,9 @@ class _RatingDialogState extends State<RatingDialog> {
                     child: AnimatedContainer(
                       duration: const Duration(milliseconds: 200),
                       padding: const EdgeInsets.symmetric(horizontal: 4),
-                      transform: isFull ? (Matrix4.identity()..scale(1.1)) : Matrix4.identity(),
+                      transform: isFull
+                          ? (Matrix4.identity()..scale(1.1))
+                          : Matrix4.identity(),
                       child: Icon(
                         isFull ? Icons.star_rounded : Icons.star_border_rounded,
                         color: Colors.orange,
@@ -160,7 +165,10 @@ class _RatingDialogState extends State<RatingDialog> {
                   maxLines: 3,
                   decoration: InputDecoration(
                     hintText: 'Share your experience (Optional)',
-                    hintStyle: TextStyle(fontSize: 13, color: Colors.grey.shade400),
+                    hintStyle: TextStyle(
+                      fontSize: 13,
+                      color: Colors.grey.shade400,
+                    ),
                     filled: true,
                     fillColor: Colors.grey.shade50,
                     enabledBorder: OutlineInputBorder(
@@ -194,7 +202,7 @@ class _RatingDialogState extends State<RatingDialog> {
                     ),
                     Switch(
                       value: _blockDriver,
-                      activeColor: Colors.red,
+                      activeThumbColor: Colors.red,
                       onChanged: (val) {
                         setState(() => _blockDriver = val);
                       },
@@ -235,29 +243,42 @@ class _RatingDialogState extends State<RatingDialog> {
                                 // Fetch the actual username from Firestore (displayName is not set on signup)
                                 String userName = 'Anonymous User';
                                 if (user != null) {
-                                  final userDoc = await FirebaseFirestore.instance
+                                  final userDoc = await FirebaseFirestore
+                                      .instance
                                       .collection('users')
                                       .doc(user.uid)
                                       .get();
-                                  userName = userDoc.data()?['username'] ?? user.email ?? 'Anonymous User';
+                                  userName =
+                                      userDoc.data()?['username'] ??
+                                      user.email ??
+                                      'Anonymous User';
                                 }
-                                
-                                await FirebaseFirestore.instance.collection('ratings').add({
-                                  'driver': widget.driverName,
-                                  'user': userName,
-                                  'rating': _rating,
-                                  'comment': _commentController.text,
-                                  'vehicle': widget.vehicleInfo,
-                                  'type': widget.vehicleInfo.toLowerCase().contains('taxi') ? 'Taxi' : 'Motorcycle',
-                                  'timestamp': FieldValue.serverTimestamp(),
-                                  'blocked': _blockDriver,
-                                  'userId': user?.uid,
-                                });
+
+                                await FirebaseFirestore.instance
+                                    .collection('ratings')
+                                    .add({
+                                      'driver': widget.driverName,
+                                      'user': userName,
+                                      'rating': _rating,
+                                      'comment': _commentController.text,
+                                      'vehicle': widget.vehicleInfo,
+                                      'type':
+                                          widget.vehicleInfo
+                                              .toLowerCase()
+                                              .contains('taxi')
+                                          ? 'Taxi'
+                                          : 'Motorcycle',
+                                      'timestamp': FieldValue.serverTimestamp(),
+                                      'blocked': _blockDriver,
+                                      'userId': user?.uid,
+                                    });
 
                                 if (mounted) {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     const SnackBar(
-                                      content: Text('Rating Submitted! Thank you.'),
+                                      content: Text(
+                                        'Rating Submitted! Thank you.',
+                                      ),
                                       backgroundColor: Colors.green,
                                     ),
                                   );
